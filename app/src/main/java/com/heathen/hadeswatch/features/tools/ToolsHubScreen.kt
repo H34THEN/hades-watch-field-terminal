@@ -26,17 +26,16 @@ import com.heathen.hadeswatch.core.ui.HadesTerminalCard
 fun ToolsHubScreen(
     onNavigate: (String) -> Unit,
     k0ReaderEnabled: Boolean = true,
+    gatewaysEnabled: Boolean = true,
     aresEnabled: Boolean = true,
     fieldNotesEnabled: Boolean = true,
 ) {
-    val visibleTools = ToolRegistry.tools.filter { tool ->
-        when (tool.id) {
-            "k0reader" -> k0ReaderEnabled
-            "ares" -> aresEnabled
-            "fieldnotes" -> fieldNotesEnabled
-            else -> true
-        }
-    }
+    val visibleTools = ToolRegistry.visibleTools(
+        k0ReaderEnabled = k0ReaderEnabled,
+        gatewaysEnabled = gatewaysEnabled,
+        aresEnabled = aresEnabled,
+        fieldNotesEnabled = fieldNotesEnabled,
+    )
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -66,6 +65,12 @@ fun ToolsHubScreen(
 private fun ToolCard(tool: ToolDefinition, onNavigate: (String) -> Unit) {
     HadesTerminalCard(title = tool.name) {
         Text(text = tool.description, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = "${tool.category.name} · ${tool.classification.name.replace('_', ' ')}",
+            style = MaterialTheme.typography.labelLarge,
+            color = MutedText,
+            modifier = Modifier.padding(top = 4.dp),
+        )
         Text(
             text = "Permissions: ${tool.permissionsNeeded}",
             style = MaterialTheme.typography.bodyMedium,
@@ -121,10 +126,8 @@ private fun ToolCard(tool: ToolDefinition, onNavigate: (String) -> Unit) {
 @Composable
 private fun statusColor(status: ToolStatus) = when (status) {
     ToolStatus.Available -> TerminalGreen
-    ToolStatus.Planned -> SignalCyan
+    ToolStatus.Planned -> com.heathen.hadeswatch.core.theme.SignalCyan
     ToolStatus.ComingSoon -> WarningAmber
     ToolStatus.WebShortcut -> OracularViolet
     ToolStatus.SettingsShortcut -> MutedText
 }
-
-private val SignalCyan = com.heathen.hadeswatch.core.theme.SignalCyan

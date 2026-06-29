@@ -28,9 +28,17 @@
 ### k0R34DER
 
 - Paste-in text only
-- Local RSVP processing
+- Local RSVP processing via `:k0r34d3r-core` Kotlin module (default)
+- Legacy `LocalK0ReaderAdapter` fallback available in Settings
 - Preferences saved on device
-- No network upload in MVP
+- No network upload
+
+### Underworld Gateways
+
+- User-defined NAS/homelab URLs stored locally
+- Opens externally — not in Hades Watch WebShell
+- No Hades Watch cookie sharing
+- No storage permissions in MVP (built-in icons only)
 
 ### Field Notes
 
@@ -48,13 +56,15 @@
 
 - Clear website session (cookies)
 - Clear WebView cache
-- Clear local tool data
+- Clear all local tool data
+- Clear k0R34DER preferences
+- Clear Underworld Gateways
 - Reduced motion / high contrast / large text
 - Tool enable/disable toggles
 
-## K0R34D3R SDK (Future)
+## K0R34D3R Kotlin Core
 
-Integration planned through `K0ReaderAdapter` — see [K0R34D3R_INTEGRATION_PLAN.md](K0R34D3R_INTEGRATION_PLAN.md).
+The `:k0r34d3r-core` module ports RSVP logic from the K0R34D3R Flutter app. It is pure Kotlin with no network or Android APIs. See [K0R34D3R_INTEGRATION_PLAN.md](K0R34D3R_INTEGRATION_PLAN.md).
 
 ## Permissions
 

@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "HadesWatchFieldTerminal"
 include(":app")
+include(":k0r34d3r-core")

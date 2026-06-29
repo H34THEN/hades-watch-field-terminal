@@ -9,11 +9,19 @@ class K0ReaderPreferences(private val repository: AppSettingsRepository) {
     val wpm: Flow<Int> = repository.k0ReaderWpm
     val chunkSize: Flow<Int> = repository.k0ReaderChunkSize
     val fontSize: Flow<Int> = repository.k0ReaderFontSize
+    val useSdkAdapter: Flow<Boolean> = repository.k0ReaderUseSdkAdapter
 
     suspend fun saveWpm(value: Int) = repository.setK0ReaderWpm(value)
     suspend fun saveChunkSize(value: Int) = repository.setK0ReaderChunkSize(value)
     suspend fun saveFontSize(value: Int) = repository.setK0ReaderFontSize(value)
+    suspend fun saveUseSdkAdapter(value: Boolean) = repository.setK0ReaderUseSdkAdapter(value)
 }
 
 @Composable
-fun rememberK0ReaderAdapter(): LocalK0ReaderAdapter = remember { LocalK0ReaderAdapter() }
+fun rememberDefaultK0ReaderAdapter(useSdk: Boolean = true): K0ReaderAdapter =
+    remember(useSdk) {
+        if (useSdk) K0SdkReaderAdapter() else LocalK0ReaderAdapter()
+    }
+
+@Composable
+fun rememberLocalK0ReaderAdapter(): LocalK0ReaderAdapter = remember { LocalK0ReaderAdapter() }

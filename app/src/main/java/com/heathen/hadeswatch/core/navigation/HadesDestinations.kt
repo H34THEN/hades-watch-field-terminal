@@ -28,12 +28,18 @@ sealed class HadesDestination(
     data object K0Reader : HadesDestination("tools/k0reader", "k0R34DER")
     data object Ares : HadesDestination("tools/ares", "4R3S")
     data object FieldNotes : HadesDestination("tools/fieldnotes", "Field Notes")
+    data object UnderworldGateways : HadesDestination("tools/gateways", "Gateways")
+    data object GatewayEditorNew : HadesDestination("tools/gateways/edit/new", "Add Gateway")
+    data object GatewayEditor : HadesDestination("tools/gateways/edit/{gatewayId}", "Edit Gateway")
     data object PrivacySafety : HadesDestination("settings/privacy", "Privacy & Safety")
 
     companion object {
         val bottomNavItems = listOf(Home, Mmo, DeadDrops, Forums, Profile, Tools, Notifications, Settings)
 
         fun webRoute(url: String): String = "web/${java.net.URLEncoder.encode(url, Charsets.UTF_8.name())}"
+
+        fun gatewayEditorRoute(gatewayId: String? = null): String =
+            if (gatewayId.isNullOrBlank()) GatewayEditorNew.route else "tools/gateways/edit/$gatewayId"
 
         fun deepLinkRoute(schemePath: String): String? = when (schemePath.lowercase()) {
             "dashboard" -> webRoute(WebRoutes.DASHBOARD)

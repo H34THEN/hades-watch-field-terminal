@@ -38,17 +38,22 @@ fun PrivacySafetyScreen() {
         privacySection(
             "WebView Companion",
             "The website remains the source of truth. The app does not scrape HTML, duplicate the database, " +
-                "or bypass website auth.",
+                "or bypass website auth. Only hadeswatch.com and www.hadeswatch.com load in the trusted WebShell.",
         )
         privacySection(
-            "Native Tools",
-            "Native tools are opt-in. k0R34DER processes pasted text locally in MVP — no network upload. " +
-                "Field Notes drafts stay on your device until you copy them manually.",
+            "k0R34DER",
+            "k0R34DER processes pasted text locally using the :k0r34d3r-core Kotlin module. " +
+                "No network upload. A legacy local fallback engine remains available in Settings.",
         )
         privacySection(
-            "K0R34D3R SDK",
-            "Integration with the K0R34D3R SDK is planned through a safe adapter boundary. " +
-                "The external SDK is not bundled in MVP.",
+            "Underworld Gateways",
+            "Underworld Gateways stores user-defined NAS/homelab URLs on your device. " +
+                "Gateway URLs are not added to the Hades Watch trusted WebView allowlist. " +
+                "Launches open externally (or in your browser) and do not inherit Hades Watch session cookies.",
+        )
+        privacySection(
+            "Field Notes",
+            "Field Notes drafts stay on your device until you copy them manually. No sync in MVP.",
         )
         privacySection(
             "4R3S Module",
@@ -60,11 +65,13 @@ fun PrivacySafetyScreen() {
         )
         privacySection(
             "Data Control",
-            "You can clear website session, WebView cache, and local tool data from Settings at any time.",
+            "You can clear website session, WebView cache, local tool data, k0R34DER preferences, " +
+                "and Underworld Gateways from Settings. Clearing local tool data does not clear website cookies " +
+                "unless you use Clear website session.",
         )
         privacySection(
             "No Background Tracking",
-            "This MVP does not run background location, Bluetooth, Wi-Fi scanning, or upload native tool data without consent.",
+            "This app does not run background location, Bluetooth, Wi-Fi scanning, or upload native tool data without consent.",
         )
     }
 }

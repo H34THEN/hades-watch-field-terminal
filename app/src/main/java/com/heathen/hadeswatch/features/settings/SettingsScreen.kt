@@ -3,6 +3,7 @@ package com.heathen.hadeswatch.features.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,6 +35,8 @@ fun SettingsScreen(
     largeText: Boolean,
     openExternalInBrowser: Boolean,
     k0ReaderEnabled: Boolean,
+    k0ReaderUseSdk: Boolean,
+    gatewaysEnabled: Boolean,
     aresEnabled: Boolean,
     fieldNotesEnabled: Boolean,
     onNavigate: (String) -> Unit,
@@ -63,8 +66,14 @@ fun SettingsScreen(
             SettingsAction("Clear WebView cache") {
                 sessionManager.clearWebViewCache()
             }
-            SettingsAction("Clear local tool data") {
+            SettingsAction("Clear all local tool data") {
                 scope.launch { settingsRepository.clearLocalToolData() }
+            }
+            SettingsAction("Clear k0R34DER preferences") {
+                scope.launch { settingsRepository.clearK0ReaderPreferences() }
+            }
+            SettingsAction("Clear Underworld Gateways") {
+                scope.launch { settingsRepository.clearGatewayData() }
             }
         }
 
@@ -87,12 +96,35 @@ fun SettingsScreen(
             SettingsToggle("Enable k0R34DER", k0ReaderEnabled) {
                 scope.launch { settingsRepository.setK0ReaderEnabled(it) }
             }
+            SettingsToggle("Use K0R34D3R Kotlin core", k0ReaderUseSdk) {
+                scope.launch { settingsRepository.setK0ReaderUseSdkAdapter(it) }
+            }
+            SettingsToggle("Enable Underworld Gateways", gatewaysEnabled) {
+                scope.launch { settingsRepository.setGatewaysEnabled(it) }
+            }
             SettingsToggle("Show 4R3S module", aresEnabled) {
                 scope.launch { settingsRepository.setAresEnabled(it) }
             }
             SettingsToggle("Enable Field Notes", fieldNotesEnabled) {
                 scope.launch { settingsRepository.setFieldNotesEnabled(it) }
             }
+        }
+
+        HadesTerminalCard(title = "Native Tool Notes") {
+            Text(
+                text = "k0R34DER processes pasted text locally via the :k0r34d3r-core module. " +
+                    "Turn off Kotlin core to use the legacy local fallback engine.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MutedText,
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
+            Text(
+                text = "Underworld Gateways stores user-defined URLs locally. Gateway launches open " +
+                    "externally and do not share Hades Watch WebView cookies.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MutedText,
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
         }
 
         HadesTerminalCard(title = "Privacy") {
@@ -124,7 +156,7 @@ private fun SettingsAction(label: String, onClick: () -> Unit) {
 
 @Composable
 private fun SettingsToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    androidx.compose.foundation.layout.Row(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),

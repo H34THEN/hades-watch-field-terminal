@@ -57,3 +57,14 @@ WebView back stack integrated with Android back gesture via `BackHandler`.
 ## Error Handling
 
 Failed main-frame loads show a friendly offline/error screen with retry — no silent failure.
+
+## Underworld Gateways (Separate from WebShell)
+
+Underworld Gateways is **not** part of the Hades Watch trusted WebView policy.
+
+- User-saved gateway URLs are **never** added to `TrustedDomainPolicy`
+- Gateway launches use `Intent.ACTION_VIEW` (external browser)
+- Gateway sessions **do not** share Hades Watch WebView cookies
+- HTTP LAN URLs require user confirmation before launch
+
+See [UNDERWORLD_GATEWAYS.md](UNDERWORLD_GATEWAYS.md).

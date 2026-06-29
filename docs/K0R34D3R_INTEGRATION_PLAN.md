@@ -1,94 +1,109 @@
-# K0R34D3R SDK Integration Plan
+# K0R34D3R Integration Plan
 
 ## Repository
 
 - **URL:** https://github.com/H34THEN/K0R34D3R
-- **Observed HEAD:** Flutter/Dart multi-platform app (not Android/Kotlin native)
+- **Local inspection path:** `/home/heathen/Projects/K0R34D3R-inspection`
+- **Repo available locally:** Yes (cloned for inspection)
 
-## Observed Structure (MVP inspection)
+## Observed Structure
+
+K0R34D3R is a **Flutter/Dart multi-platform application**, not a Kotlin/Android library.
 
 ```
 K0R34D3R/
-├── lib/
-│   ├── services/text_processing_service.dart   # RSVP chunking, word split
-│   ├── screens/rsvp_screen.dart
-│   └── ... (Flutter UI, Hive storage, PDF/EPUB import)
+├── lib/services/text_processing_service.dart   # Core RSVP logic
+├── lib/models/app_settings.dart                # WPM, chunk modes, UI prefs
+├── lib/screens/rsvp_screen.dart                # Flutter RSVP UI
 ├── pubspec.yaml                                # Flutter SDK ^3.12
-├── android/                                    # Flutter Android host
-├── ios/, linux/, macos/, web/, windows/
-└── test/
+└── android/, ios/, web/, ...                   # Platform hosts
 ```
 
-**Conclusion:** K0R34D3R is a **Flutter application**, not a standalone Kotlin/Android library. Direct Gradle module import is **not clean** for MVP.
+## Files Inspected
 
-## Recommended Integration Mode
+| File | Relevance |
+|------|-----------|
+| `lib/services/text_processing_service.dart` | **Ported** — whitespace, word split, chunking, ORP, timing |
+| `lib/models/app_settings.dart` | Partially referenced — WPM bounds, chunk modes |
+| `lib/screens/rsvp_screen.dart` | UI inspiration only — not ported |
+| `lib/services/*_import_service.dart` | **Not ported** — network/import features |
+| `lib/services/storage_service.dart` | **Not ported** — Hive storage (app uses DataStore) |
 
-| Option | Feasibility | Notes |
-|--------|-------------|-------|
-| Git submodule as Gradle module | Low | Flutter module embedding adds toolchain weight |
-| Extract `text_processing_service.dart` logic | Medium | Port RSVP algorithms to Kotlin (adapter already exists) |
-| Flutter module in Android app | Medium-Low | Requires Flutter SDK in CI and dual stack |
-| Separate K0R34D3R Android library fork | Future | Best if SDK is split from app UI |
+## Relevant Dart Logic Found
 
-**MVP choice:** Keep local Kotlin `RsvpReaderEngine` behind `K0ReaderAdapter`. Document port path from Dart `TextProcessingService`.
+From `TextProcessingService`:
 
-## App Interface (Adapter Contract)
+- `normalizeWhitespace` — CRLF, collapse spaces/tabs, trim excess newlines
+- `splitIntoWords` — whitespace tokenization preserving punctuation on words
+- `buildRsvpChunks` — 1/2/3 word chunks + phrase mode (punctuation boundaries, max 8 words)
+- `wordIndexForChunkIndex` / `chunkIndexForWordIndex` — index mapping on chunk resize
+- `optimalRecognitionPoint` — ORP at ~37% of chunk length
+- `estimatedSecondsRemaining` / `formatDuration` — WPM timing helpers
 
-```kotlin
-interface K0ReaderAdapter {
-    fun loadText(text: String)
-    fun setWordsPerMinute(wpm: Int)
-    fun setChunkSize(chunkSize: Int)
-    fun currentToken(): String
-    fun nextToken(): String?
-    fun previousToken(): String?
-    fun reset()
-    fun tokenCount(): Int
-    fun currentIndex(): Int
-    fun rewind(steps: Int = 10)
-}
+From `AppSettings`:
+
+- WPM range 100–1200
+- `ChunkSizeMode`: oneWord, twoWords, threeWords, phrase
+
+## What Was Ported (Kotlin `:k0r34d3r-core`)
+
+| Dart | Kotlin module |
+|------|---------------|
+| `normalizeWhitespace` | `K0R34D3RTokenizer.normalizeWhitespace` |
+| `splitIntoWords` | `K0R34D3RTokenizer.splitIntoWords` |
+| `buildRsvpChunks` | `K0R34D3RChunker.buildTokens` |
+| Chunk index mapping | `K0R34D3RChunker.wordIndexForChunkIndex` etc. |
+| `optimalRecognitionPoint` | `K0R34D3RChunker.optimalRecognitionPoint` |
+| Reader stepping | `K0R34D3RReader` implementing `K0R34D3RCore` |
+
+**App integration:** `K0SdkReaderAdapter` wraps `K0R34D3RReader` for the k0R34DER Compose screen.
+
+## What Was Intentionally Not Ported
+
+- Flutter UI (themes, reticles, backgrounds, fonts)
+- Document import (PDF, EPUB, Reddit, article extraction)
+- Hive/local document library
+- Network HTTP fetching
+- Full `AppSettings` theme/visual configuration
+- Wakelock / keep-awake behavior
+
+## Current Kotlin Architecture
+
+```
+:k0r34d3r-core/                    # Pure Kotlin JVM library
+  com.heathen.k0r34d3r.core/
+    K0R34D3RCore.kt                 # Interface
+    K0R34D3RReader.kt               # Default implementation
+    K0R34D3RTokenizer.kt
+    K0R34D3RChunker.kt
+    K0R34D3RReaderConfig.kt
+    K0R34D3RReadingState.kt
+
+app/features/k0reader/
+  K0ReaderAdapter.kt                # App-facing interface
+  K0SdkReaderAdapter.kt             # Wraps :k0r34d3r-core (default)
+  LocalK0ReaderAdapter.kt           # Legacy fallback
+  RsvpReaderEngine.kt               # Fallback engine (retained)
 ```
 
-**Implementation in MVP:** `LocalK0ReaderAdapter` → `RsvpReaderEngine`
+## Why Flutter Was Not Embedded
 
-**Future SDK implementation:** `K0SdkReaderAdapter` (not yet created) could:
+- K0R34D3R is a standalone Flutter **app**, not an embeddable SDK module
+- Embedding Flutter would add dual toolchain weight to CI and APK size
+- Hades Watch Field Terminal is Kotlin/Compose-first
+- RSVP logic is small enough to port safely into a shared Kotlin core
 
-1. Wrap a ported Kotlin library extracted from K0R34D3R algorithms, or
-2. Delegate to a Flutter engine channel if full SDK UI is embedded (heavier)
+## Future Path to True Shared SDK
 
-## Porting Checklist (Next Steps)
+1. **Extract** `:k0r34d3r-core` from Field Terminal into its own repo or K0R34D3R monorepo subdirectory
+2. **Publish** as Maven artifact or Git submodule consumed by both projects
+3. **Optional:** K0R34D3R Flutter app could call the same core via FFI/platform channel (long-term)
+4. **Keep** `K0ReaderAdapter` as the app boundary — swap implementations without UI changes
+5. Add parity tests comparing Dart `TextProcessingService` output vs Kotlin core for golden texts
 
-1. Extract `TextProcessingService` RSVP/chunk logic from K0R34D3R into a Kotlin module (`:k0r34d3r-core`).
-2. Add unit tests comparing Dart vs Kotlin token output for sample texts.
-3. Implement `K0SdkReaderAdapter : K0ReaderAdapter` using the shared core.
-4. Optional: publish `:k0r34d3r-core` from K0R34D3R repo or submodule.
-5. Keep UI in Hades Watch Field Terminal Compose screens (do not embed full Flutter UI unless required).
+## Safety / Privacy
 
-## Safety / Privacy Expectations
-
-- No automatic import of website content
-- No network upload of pasted text in reader MVP
-- No storage permissions for reader MVP
-- K0R34D3R's Reddit/article import features should **not** be enabled in Hades Watch companion without explicit product review
-
-## Current MVP Fallback
-
-`features/k0reader/RsvpReaderEngine.kt` provides:
-
-- Whitespace normalization
-- Word/chunk splitting (1–4 words per chunk)
-- WPM-based timing via `intervalMillis()`
-- Manual prev/next/rewind/reset
-
-Algorithm inspired by K0R34D3R's `text_processing_service.dart` but implemented independently in Kotlin.
-
-## Submodule Command (Future)
-
-When a Kotlin core module exists:
-
-```bash
-git submodule add https://github.com/H34THEN/K0R34D3R.git external/K0R34D3R
-# Then include only the extracted core module in settings.gradle.kts
-```
-
-Do **not** submodule the full Flutter app into this repo until the integration path is stable.
+- Core module has **no network**, **no storage**, **no Android APIs**
+- k0R34DER UI accepts pasted text only — no website scraping
+- No upload of reader text
+- User can disable Kotlin core and use `LocalK0ReaderAdapter` fallback in Settings

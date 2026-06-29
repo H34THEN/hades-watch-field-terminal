@@ -12,6 +12,7 @@ Hades Watch Field Terminal is a native Android companion for [hadeswatch.com](ht
 ## Layers
 
 ```
+k0r34d3r-core/               # Pure Kotlin JVM RSVP/text-processing library
 app/
 ├── MainActivity.kt          # Compose host, deep links, bottom nav
 ├── HadesWatchApp.kt         # Application-level repositories
@@ -27,6 +28,7 @@ app/
     ├── webshell/            # WebView screen wrapper
     ├── tools/               # Tool registry + hub
     ├── k0reader/            # RSVP reader + adapter boundary
+    ├── gateways/            # Underworld Gateways launcher
     ├── ares/                # 4R3S placeholder
     ├── fieldnotes/          # Local drafts
     ├── notifications/       # Web shortcut to site notifications
@@ -58,9 +60,18 @@ Deep links (`hadeswatch://…`) map to the same routes where supported.
 
 ## K0R34D3R Adapter Boundary
 
-`K0ReaderAdapter` isolates the RSVP engine from UI. MVP uses `LocalK0ReaderAdapter` + `RsvpReaderEngine`. Future K0R34D3R SDK can implement the same interface or wrap a ported engine.
+`K0ReaderAdapter` isolates the RSVP engine from UI.
 
-See [K0R34D3R_INTEGRATION_PLAN.md](K0R34D3R_INTEGRATION_PLAN.md).
+- **Default:** `K0SdkReaderAdapter` → `:k0r34d3r-core` (`K0R34D3RReader`)
+- **Fallback:** `LocalK0ReaderAdapter` → `RsvpReaderEngine` (legacy MVP engine)
+
+Toggle in Settings: **Use K0R34D3R Kotlin core**.
+
+See [K0R34D3R_INTEGRATION_PLAN.md](K0R34D3R_INTEGRATION_PLAN.md) and [TOOLS_ARCHITECTURE.md](TOOLS_ARCHITECTURE.md).
+
+## Underworld Gateways
+
+User-defined NAS/homelab URL launcher — **not** part of the Hades Watch WebShell. See [UNDERWORLD_GATEWAYS.md](UNDERWORLD_GATEWAYS.md).
 
 ## Build Targets
 
