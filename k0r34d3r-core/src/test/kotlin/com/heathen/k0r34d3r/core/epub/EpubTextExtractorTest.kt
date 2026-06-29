@@ -37,7 +37,20 @@ class EpubTextExtractorTest {
         }
     }
 
-    private fun buildMinimalEpub(title: String, chapterHtml: String): ByteArray {
+    @Test
+    fun extractsMinimalEpubWithHrefBeforeId() {
+        val epub = buildMinimalEpub(
+            title = "Reordered",
+            chapterHtml = "<html><body><p>Field terminal online.</p></body></html>",
+            hrefBeforeId = true,
+        )
+        val result = EpubTextExtractor.extract(epub, filename = "reorder.epub")
+        assertEquals("Reordered", result.title)
+        assertTrue(result.plainText.contains("Field terminal online"))
+        assertEquals(1, result.chapterCount)
+    }
+
+    private fun buildMinimalEpub(title: String, chapterHtml: String, hrefBeforeId: Boolean = false): ByteArray {
         val container = """
             <?xml version="1.0"?>
             <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -46,6 +59,11 @@ class EpubTextExtractorTest {
               </rootfiles>
             </container>
         """.trimIndent()
+        val manifestItem = if (hrefBeforeId) {
+            """<item href="chapter1.xhtml" id="ch1" media-type="application/xhtml+xml"/>"""
+        } else {
+            """<item id="ch1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>"""
+        }
         val opf = """
             <?xml version="1.0"?>
             <package xmlns="http://www.idpf.org/2007/opf" version="2.0">
@@ -53,7 +71,7 @@ class EpubTextExtractorTest {
                 <dc:title>$title</dc:title>
               </metadata>
               <manifest>
-                <item id="ch1" href="chapter1.xhtml" media-type="application/xhtml+xml"/>
+                $manifestItem
               </manifest>
               <spine>
                 <itemref idref="ch1"/>

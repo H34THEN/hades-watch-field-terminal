@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +44,7 @@ fun CommandHex(
     isMenuOpen: Boolean,
     isDragging: Boolean,
     onPositionChange: (HexPosition) -> Unit,
+    onDragEnd: (HexPosition) -> Unit,
     onTap: () -> Unit,
     onLongPress: () -> Unit,
     onDragStateChange: (Boolean) -> Unit,
@@ -54,12 +56,17 @@ fun CommandHex(
 ) {
     val density = LocalDensity.current
     val hexPx = with(density) { hexSize.toPx() }
-    var dragStart by remember { mutableStateOf(Offset.Zero) }
-    var dragAccum by remember { mutableStateOf(Offset.Zero) }
+
+    // Local drag offset keeps the gesture alive — parent position must not reset pointerInput.
+    var dragOffsetX by remember { mutableFloatStateOf(0f) }
+    var dragOffsetY by remember { mutableFloatStateOf(0f) }
+    var dragStartCenter by remember { mutableStateOf(Offset.Zero) }
     var didDrag by remember { mutableStateOf(false) }
 
-    val centerX = safeLeftPx + position.xFraction * safeWidthPx
-    val centerY = safeTopPx + position.yFraction * safeHeightPx
+    val baseCenterX = safeLeftPx + position.xFraction * safeWidthPx
+    val baseCenterY = safeTopPx + position.yFraction * safeHeightPx
+    val centerX = if (isDragging) dragStartCenter.x + dragOffsetX else baseCenterX
+    val centerY = if (isDragging) dragStartCenter.y + dragOffsetY else baseCenterY
 
     val scale by animateFloatAsState(
         targetValue = when {
@@ -69,6 +76,15 @@ fun CommandHex(
         },
         label = "hexScale",
     )
+
+    fun positionFromCenter(cx: Float, cy: Float): HexPosition {
+        val newX = (cx - safeLeftPx).coerceIn(hexPx / 2f, safeWidthPx - hexPx / 2f)
+        val newY = (cy - safeTopPx).coerceIn(hexPx / 2f, safeHeightPx - hexPx / 2f)
+        return HexPosition(
+            xFraction = (newX / safeWidthPx).coerceIn(0f, 1f),
+            yFraction = (newY / safeHeightPx).coerceIn(0f, 1f),
+        )
+    }
 
     Box(
         modifier = modifier
@@ -80,40 +96,47 @@ fun CommandHex(
             .clip(HexagonShape)
             .background(PanelDark.copy(alpha = 0.94f))
             .border(2.dp, if (isMenuOpen) SignalCyan else PanelBorder, HexagonShape)
-            .pointerInput(safeWidthPx, safeHeightPx, position) {
+            .pointerInput(hexSize, safeLeftPx, safeTopPx, safeWidthPx, safeHeightPx) {
                 detectDragGestures(
                     onDragStart = {
-                        dragStart = Offset(centerX, centerY)
-                        dragAccum = Offset.Zero
+                        dragStartCenter = Offset(baseCenterX, baseCenterY)
+                        dragOffsetX = 0f
+                        dragOffsetY = 0f
                         didDrag = false
                         onDragStateChange(true)
                     },
                     onDragEnd = {
+                        val finalPosition = positionFromCenter(
+                            dragStartCenter.x + dragOffsetX,
+                            dragStartCenter.y + dragOffsetY,
+                        )
+                        dragOffsetX = 0f
+                        dragOffsetY = 0f
                         onDragStateChange(false)
-                        dragAccum = Offset.Zero
+                        onPositionChange(finalPosition)
+                        onDragEnd(finalPosition)
                     },
                     onDragCancel = {
+                        dragOffsetX = 0f
+                        dragOffsetY = 0f
                         onDragStateChange(false)
-                        dragAccum = Offset.Zero
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        dragAccum += dragAmount
-                        if (dragAccum.getDistance() > 12f) didDrag = true
-                        val newX = (dragStart.x + dragAccum.x - safeLeftPx)
-                            .coerceIn(hexPx / 2f, safeWidthPx - hexPx / 2f)
-                        val newY = (dragStart.y + dragAccum.y - safeTopPx)
-                            .coerceIn(hexPx / 2f, safeHeightPx - hexPx / 2f)
-                        onPositionChange(
-                            HexPosition(
-                                xFraction = (newX / safeWidthPx).coerceIn(0f, 1f),
-                                yFraction = (newY / safeHeightPx).coerceIn(0f, 1f),
-                            ),
+                        dragOffsetX += dragAmount.x
+                        dragOffsetY += dragAmount.y
+                        if (!didDrag && Offset(dragOffsetX, dragOffsetY).getDistance() > 12f) {
+                            didDrag = true
+                        }
+                        val livePosition = positionFromCenter(
+                            dragStartCenter.x + dragOffsetX,
+                            dragStartCenter.y + dragOffsetY,
                         )
+                        onPositionChange(livePosition)
                     },
                 )
             }
-            .pointerInput(didDrag) {
+            .pointerInput(Unit) {
                 detectTapGestures(
                     onLongPress = { onLongPress() },
                     onTap = {

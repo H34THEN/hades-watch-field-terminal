@@ -67,7 +67,9 @@ fun HadesHudScaffold(
     var isDragging by remember { mutableStateOf(false) }
 
     LaunchedEffect(storedPosition) {
-        hexPosition = storedPosition
+        if (!isDragging) {
+            hexPosition = storedPosition
+        }
     }
 
     val isWebScreen = currentTabRoute == HadesDestination.WebHub.tabRoute ||
@@ -138,10 +140,9 @@ fun HadesHudScaffold(
             containerHeightPx,
             density.density,
         )
-        LaunchedEffect(clampedPosition.xFraction, clampedPosition.yFraction) {
-            if (clampedPosition != hexPosition) {
+        LaunchedEffect(clampedPosition.xFraction, clampedPosition.yFraction, isDragging) {
+            if (!isDragging && clampedPosition != hexPosition) {
                 hexPosition = clampedPosition
-                positionStore.save(clampedPosition)
             }
         }
 
@@ -170,7 +171,10 @@ fun HadesHudScaffold(
                 isDragging = isDragging,
                 onPositionChange = { updated ->
                     hexPosition = updated
-                    scope.launch { positionStore.save(updated) }
+                },
+                onDragEnd = { final ->
+                    hexPosition = final
+                    scope.launch { positionStore.save(final) }
                 },
                 onTap = { hexState.isMenuOpen = !hexState.isMenuOpen },
                 onLongPress = {

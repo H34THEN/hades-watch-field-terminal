@@ -100,9 +100,13 @@ object EpubTextExtractor {
 
     private fun parseManifest(opfXml: ByteArray): Map<String, String> {
         val text = opfXml.toString(Charsets.UTF_8)
-        val items = Regex("""<item\s+[^>]*id="([^"]+)"[^>]*href="([^"]+)"[^>]*/?>""", RegexOption.IGNORE_CASE)
-            .findAll(text)
-        return items.associate { it.groupValues[1] to it.groupValues[2] }
+        val itemRegex = Regex("""<item\s+([^>]+?)\s*/?>""", RegexOption.IGNORE_CASE)
+        return itemRegex.findAll(text).mapNotNull { match ->
+            val attrs = match.groupValues[1]
+            val id = Regex("""\bid="([^"]+)"""", RegexOption.IGNORE_CASE).find(attrs)?.groupValues?.getOrNull(1)
+            val href = Regex("""\bhref="([^"]+)"""", RegexOption.IGNORE_CASE).find(attrs)?.groupValues?.getOrNull(1)
+            if (id != null && href != null) id to href else null
+        }.toMap()
     }
 
     private fun parseSpineItemRefs(opfXml: ByteArray): List<String> {

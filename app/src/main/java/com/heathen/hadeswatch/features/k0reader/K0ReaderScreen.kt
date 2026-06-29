@@ -272,7 +272,9 @@ fun K0ReaderScreen(
                         epubPicker.launch(
                             arrayOf(
                                 "application/epub+zip",
+                                "application/x-epub+zip",
                                 "application/octet-stream",
+                                "application/zip",
                             ),
                         )
                     },
