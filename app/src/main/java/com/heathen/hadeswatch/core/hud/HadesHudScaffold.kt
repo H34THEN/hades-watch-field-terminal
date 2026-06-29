@@ -154,17 +154,6 @@ fun HadesHudScaffold(
         }
 
         if (fieldHexEnabled && !hexState.isHidden()) {
-            val (halfWidthPx, halfHeightPx) = CommandHexBounds.halfExtentsPx(hexDimensions, density)
-            val center = CommandHexBounds.centerFromFraction(
-                position = clampedPosition,
-                safeLeftPx = safeLeftPx,
-                safeTopPx = safeTopPx,
-                safeWidthPx = safeWidthPx,
-                safeHeightPx = safeHeightPx,
-                halfWidthPx = halfWidthPx,
-                halfHeightPx = halfHeightPx,
-            )
-
             CommandHex(
                 position = clampedPosition,
                 dimensions = hexDimensions,
@@ -196,11 +185,6 @@ fun HadesHudScaffold(
 
             CommandHexMenu(
                 visible = hexState.isMenuOpen,
-                hexCenterX = center.x,
-                hexCenterY = center.y,
-                hexSizePx = maxOf(halfWidthPx * 2f, halfHeightPx * 2f),
-                screenWidthPx = containerWidthPx,
-                screenHeightPx = containerHeightPx,
                 actions = menuActions,
                 onDismiss = { hexState.isMenuOpen = false },
                 onAction = { action ->

@@ -2,6 +2,7 @@ package com.heathen.hadeswatch.core.web
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -53,6 +54,11 @@ fun HadesWebView(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                 )
 
+                overScrollMode = View.OVER_SCROLL_NEVER
+                isHorizontalScrollBarEnabled = false
+                isVerticalScrollBarEnabled = true
+                scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
+
                 settings.apply {
                     javaScriptEnabled = true
                     domStorageEnabled = true
@@ -64,11 +70,12 @@ fun HadesWebView(
                         allowUniversalAccessFromFileURLs = false
                     }
                     mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-                    loadWithOverviewMode = true
+                    loadWithOverviewMode = false
                     useWideViewPort = true
                     builtInZoomControls = false
                     displayZoomControls = false
                     setSupportMultipleWindows(false)
+                    setSupportZoom(false)
 
                     val defaultUa = userAgentString ?: ""
                     if (!defaultUa.contains("HadesWatchAndroid")) {

@@ -9,79 +9,59 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import com.heathen.hadeswatch.core.theme.MutedText
-import com.heathen.hadeswatch.core.theme.PanelDark
 import com.heathen.hadeswatch.core.theme.PanelBorder
+import com.heathen.hadeswatch.core.theme.PanelDark
 import com.heathen.hadeswatch.core.theme.SignalCyan
 import com.heathen.hadeswatch.core.theme.TerminalGreen
 import com.heathen.hadeswatch.core.ui.HadesIcon
 import com.heathen.hadeswatch.core.ui.ToolIconKey
-import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommandHexMenu(
     visible: Boolean,
-    hexCenterX: Float,
-    hexCenterY: Float,
-    hexSizePx: Float,
-    screenWidthPx: Float,
-    screenHeightPx: Float,
     actions: List<CommandHexAction>,
     onDismiss: () -> Unit,
     onAction: (CommandHexAction) -> Unit,
 ) {
     if (!visible) return
 
-    val menuWidthDp = 280.dp
-    val density = LocalDensity.current
-    val menuWidthPx = with(density) { menuWidthDp.toPx() }
-    val menuMaxHeightPx = screenHeightPx * 0.55f
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    val preferLeft = hexCenterX > screenWidthPx / 2f
-    val preferAbove = hexCenterY > screenHeightPx * 0.55f
-
-    val offsetX = when {
-        preferLeft -> (hexCenterX - menuWidthPx - hexSizePx / 2f).coerceAtLeast(8f)
-        else -> (hexCenterX + hexSizePx / 2f).coerceAtMost(screenWidthPx - menuWidthPx - 8f)
-    }
-    val offsetY = when {
-        preferAbove -> (hexCenterY - menuMaxHeightPx - hexSizePx / 2f).coerceAtLeast(8f)
-        else -> (hexCenterY + hexSizePx / 2f).coerceAtMost(screenHeightPx - menuMaxHeightPx - 8f)
-    }
-
-    Popup(
-        alignment = androidx.compose.ui.Alignment.TopStart,
-        offset = IntOffset(offsetX.roundToInt(), offsetY.roundToInt()),
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        properties = PopupProperties(focusable = true, dismissOnBackPress = true, dismissOnClickOutside = true),
+        sheetState = sheetState,
+        containerColor = PanelDark,
+        tonalElevation = 0.dp,
+        dragHandle = null,
     ) {
         Column(
             modifier = Modifier
-                .widthIn(max = menuWidthDp)
-                .sizeIn(maxHeight = with(density) { menuMaxHeightPx.toDp() })
-                .shadow(8.dp, RoundedCornerShape(12.dp))
-                .clip(RoundedCornerShape(12.dp))
-                .background(PanelDark.copy(alpha = 0.97f))
-                .border(1.dp, PanelBorder, RoundedCornerShape(12.dp))
-                .padding(12.dp)
-                .verticalScroll(rememberScrollState()),
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp, bottom = 28.dp)
+                .sizeIn(maxHeight = 480.dp)
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .border(1.dp, PanelBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .background(PanelDark.copy(alpha = 0.98f))
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
@@ -90,7 +70,7 @@ fun CommandHexMenu(
                 color = TerminalGreen,
             )
             Text(
-                text = "Command Hex menu",
+                text = "Command menu",
                 style = MaterialTheme.typography.bodySmall,
                 color = MutedText,
                 modifier = Modifier.padding(bottom = 4.dp),
@@ -102,7 +82,7 @@ fun CommandHexMenu(
                     if (lastGroup != null) {
                         HorizontalDivider(
                             color = PanelBorder,
-                            modifier = Modifier.padding(vertical = 4.dp),
+                            modifier = Modifier.padding(vertical = 6.dp),
                         )
                     }
                     Text(
@@ -144,7 +124,7 @@ private fun CommandHexMenuRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .clickable(enabled = action.enabled, onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 10.dp),
+            .padding(horizontal = 8.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -159,6 +139,9 @@ private fun CommandHexMenuRow(
             text = action.label,
             style = MaterialTheme.typography.bodyLarge,
             color = if (action.enabled) TerminalGreen else MutedText.copy(alpha = 0.5f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
         )
     }
 }
