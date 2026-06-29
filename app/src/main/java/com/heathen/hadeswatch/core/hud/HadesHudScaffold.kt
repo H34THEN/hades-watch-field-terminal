@@ -105,7 +105,7 @@ fun HadesHudScaffold(
         },
     )
 
-    val hexSize = CommandHexBounds.hexSizeDp(
+    val hexDimensions = CommandHexBounds.hexDimensions(
         FieldHexSize.entries.getOrElse(fieldHexSize) { FieldHexSize.Medium },
     )
     val hexOpacity = CommandHexBounds.opacityValue(
@@ -134,7 +134,7 @@ fun HadesHudScaffold(
 
         val clampedPosition = CommandHexBounds.clamp(
             hexPosition,
-            hexSize,
+            hexDimensions,
             safePadding,
             containerWidthPx,
             containerHeightPx,
@@ -159,19 +159,22 @@ fun HadesHudScaffold(
         }
 
         if (fieldHexEnabled && !hexState.isHidden()) {
-            val hexPx = with(density) { hexSize.toPx() }
-            val centerX = safeLeftPx + clampedPosition.xFraction * safeWidthPx
-            val centerY = safeTopPx + clampedPosition.yFraction * safeHeightPx
+            val (halfWidthPx, halfHeightPx) = CommandHexBounds.halfExtentsPx(hexDimensions, density)
+            val center = CommandHexBounds.centerFromFraction(
+                position = clampedPosition,
+                safeLeftPx = safeLeftPx,
+                safeTopPx = safeTopPx,
+                safeWidthPx = safeWidthPx,
+                safeHeightPx = safeHeightPx,
+                halfWidthPx = halfWidthPx,
+                halfHeightPx = halfHeightPx,
+            )
 
             CommandHex(
                 position = clampedPosition,
-                hexSize = hexSize,
+                dimensions = hexDimensions,
                 opacity = hexOpacity,
                 isMenuOpen = hexState.isMenuOpen,
-                isDragging = isDragging,
-                onPositionChange = { updated ->
-                    hexPosition = updated
-                },
                 onDragEnd = { final ->
                     hexPosition = final
                     scope.launch { positionStore.save(final) }
@@ -190,9 +193,9 @@ fun HadesHudScaffold(
 
             CommandHexMenu(
                 visible = hexState.isMenuOpen,
-                hexCenterX = centerX,
-                hexCenterY = centerY,
-                hexSizePx = hexPx,
+                hexCenterX = center.x,
+                hexCenterY = center.y,
+                hexSizePx = maxOf(halfWidthPx * 2f, halfHeightPx * 2f),
                 screenWidthPx = containerWidthPx,
                 screenHeightPx = containerHeightPx,
                 actions = menuActions,

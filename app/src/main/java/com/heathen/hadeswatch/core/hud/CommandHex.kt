@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,7 +26,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.heathen.hadeswatch.core.theme.PanelBorder
@@ -39,11 +37,9 @@ import kotlin.math.roundToInt
 @Composable
 fun CommandHex(
     position: HexPosition,
-    hexSize: Dp,
+    dimensions: HexDimensions,
     opacity: Float,
     isMenuOpen: Boolean,
-    isDragging: Boolean,
-    onPositionChange: (HexPosition) -> Unit,
     onDragEnd: (HexPosition) -> Unit,
     onTap: () -> Unit,
     onLongPress: () -> Unit,
@@ -55,84 +51,94 @@ fun CommandHex(
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    val hexPx = with(density) { hexSize.toPx() }
+    val (halfWidthPx, halfHeightPx) = CommandHexBounds.halfExtentsPx(dimensions, density)
 
-    // Local drag offset keeps the gesture alive — parent position must not reset pointerInput.
-    var dragOffsetX by remember { mutableFloatStateOf(0f) }
-    var dragOffsetY by remember { mutableFloatStateOf(0f) }
-    var dragStartCenter by remember { mutableStateOf(Offset.Zero) }
+    var dragCenterPx by remember { mutableStateOf<Offset?>(null) }
     var didDrag by remember { mutableStateOf(false) }
 
-    val baseCenterX = safeLeftPx + position.xFraction * safeWidthPx
-    val baseCenterY = safeTopPx + position.yFraction * safeHeightPx
-    val centerX = if (isDragging) dragStartCenter.x + dragOffsetX else baseCenterX
-    val centerY = if (isDragging) dragStartCenter.y + dragOffsetY else baseCenterY
+    val restingCenter = CommandHexBounds.centerFromFraction(
+        position = position,
+        safeLeftPx = safeLeftPx,
+        safeTopPx = safeTopPx,
+        safeWidthPx = safeWidthPx,
+        safeHeightPx = safeHeightPx,
+        halfWidthPx = halfWidthPx,
+        halfHeightPx = halfHeightPx,
+    )
+    val center = dragCenterPx ?: restingCenter
+    val isDragging = dragCenterPx != null
 
     val scale by animateFloatAsState(
         targetValue = when {
-            isDragging -> 1.08f
-            isMenuOpen -> 1.04f
+            isDragging -> 1.06f
+            isMenuOpen -> 1.03f
             else -> 1f
         },
         label = "hexScale",
     )
 
-    fun positionFromCenter(cx: Float, cy: Float): HexPosition {
-        val newX = (cx - safeLeftPx).coerceIn(hexPx / 2f, safeWidthPx - hexPx / 2f)
-        val newY = (cy - safeTopPx).coerceIn(hexPx / 2f, safeHeightPx - hexPx / 2f)
-        return HexPosition(
-            xFraction = (newX / safeWidthPx).coerceIn(0f, 1f),
-            yFraction = (newY / safeHeightPx).coerceIn(0f, 1f),
+    fun clampCenter(raw: Offset): Offset {
+        val minX = safeLeftPx + halfWidthPx
+        val minY = safeTopPx + halfHeightPx
+        val maxX = minX + (safeWidthPx - halfWidthPx * 2f).coerceAtLeast(0f)
+        val maxY = minY + (safeHeightPx - halfHeightPx * 2f).coerceAtLeast(0f)
+        return Offset(
+            x = raw.x.coerceIn(minX, maxX),
+            y = raw.y.coerceIn(minY, maxY),
         )
     }
 
     Box(
         modifier = modifier
-            .offset { IntOffset((centerX - hexPx / 2f).roundToInt(), (centerY - hexPx / 2f).roundToInt()) }
-            .size(hexSize)
+            .offset {
+                IntOffset(
+                    (center.x - halfWidthPx).roundToInt(),
+                    (center.y - halfHeightPx).roundToInt(),
+                )
+            }
+            .size(dimensions.width, dimensions.height)
             .scale(scale)
             .alpha(opacity)
             .semantics { contentDescription = "Open Field Terminal menu" }
             .clip(HexagonShape)
             .background(PanelDark.copy(alpha = 0.94f))
             .border(2.dp, if (isMenuOpen) SignalCyan else PanelBorder, HexagonShape)
-            .pointerInput(hexSize, safeLeftPx, safeTopPx, safeWidthPx, safeHeightPx) {
+            .pointerInput(dimensions, safeLeftPx, safeTopPx, safeWidthPx, safeHeightPx) {
                 detectDragGestures(
                     onDragStart = {
-                        dragStartCenter = Offset(baseCenterX, baseCenterY)
-                        dragOffsetX = 0f
-                        dragOffsetY = 0f
                         didDrag = false
+                        dragCenterPx = restingCenter
                         onDragStateChange(true)
                     },
                     onDragEnd = {
-                        val finalPosition = positionFromCenter(
-                            dragStartCenter.x + dragOffsetX,
-                            dragStartCenter.y + dragOffsetY,
-                        )
-                        dragOffsetX = 0f
-                        dragOffsetY = 0f
+                        val finalCenter = dragCenterPx ?: restingCenter
+                        dragCenterPx = null
                         onDragStateChange(false)
-                        onPositionChange(finalPosition)
-                        onDragEnd(finalPosition)
+                        onDragEnd(
+                            CommandHexBounds.fractionFromCenter(
+                                centerX = finalCenter.x,
+                                centerY = finalCenter.y,
+                                safeLeftPx = safeLeftPx,
+                                safeTopPx = safeTopPx,
+                                safeWidthPx = safeWidthPx,
+                                safeHeightPx = safeHeightPx,
+                                halfWidthPx = halfWidthPx,
+                                halfHeightPx = halfHeightPx,
+                            ),
+                        )
                     },
                     onDragCancel = {
-                        dragOffsetX = 0f
-                        dragOffsetY = 0f
+                        dragCenterPx = null
                         onDragStateChange(false)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        dragOffsetX += dragAmount.x
-                        dragOffsetY += dragAmount.y
-                        if (!didDrag && Offset(dragOffsetX, dragOffsetY).getDistance() > 12f) {
+                        val current = dragCenterPx ?: restingCenter
+                        val next = clampCenter(current + dragAmount)
+                        dragCenterPx = next
+                        if (!didDrag && (next - restingCenter).getDistance() > 12f) {
                             didDrag = true
                         }
-                        val livePosition = positionFromCenter(
-                            dragStartCenter.x + dragOffsetX,
-                            dragStartCenter.y + dragOffsetY,
-                        )
-                        onPositionChange(livePosition)
                     },
                 )
             }
@@ -151,7 +157,7 @@ fun CommandHex(
             imageVector = Icons.Default.Terminal,
             contentDescription = null,
             tint = if (isMenuOpen) SignalCyan else TerminalGreen,
-            modifier = Modifier.size(hexSize * 0.42f),
+            modifier = Modifier.size(dimensions.width * 0.38f),
         )
     }
 }

@@ -7,7 +7,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 
-/** Flat-top hexagon for the Field Hex command orb. */
+/**
+ * Pointy-top regular hexagon tuned for a wider HUD orb (width >= height).
+ * Fits the [HexDimensions] width × height box.
+ */
 object HexagonShape : Shape {
     override fun createOutline(
         size: Size,
@@ -17,12 +20,12 @@ object HexagonShape : Shape {
         val w = size.width
         val h = size.height
         val path = Path().apply {
-            moveTo(w * 0.25f, 0f)
-            lineTo(w * 0.75f, 0f)
-            lineTo(w, h * 0.5f)
-            lineTo(w * 0.75f, h)
-            lineTo(w * 0.25f, h)
-            lineTo(0f, h * 0.5f)
+            moveTo(w * 0.5f, 0f)
+            lineTo(w, h * 0.25f)
+            lineTo(w, h * 0.75f)
+            lineTo(w * 0.5f, h)
+            lineTo(0f, h * 0.75f)
+            lineTo(0f, h * 0.25f)
             close()
         }
         return Outline.Generic(path)
