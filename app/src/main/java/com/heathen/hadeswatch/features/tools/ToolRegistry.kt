@@ -16,7 +16,7 @@ object ToolRegistry {
             iconKey = "k0reader",
             permissionsNeeded = "None",
             safetyNote = "Processes pasted text locally via K0R34D3R Kotlin core. No upload.",
-            route = HadesDestination.K0Reader.route,
+            route = HadesDestination.Reader.route,
             settingsToggleKey = SettingsKeys.TOOL_K0READER_ENABLED,
         ),
         ToolDefinition(
@@ -127,27 +127,20 @@ object ToolRegistry {
     ): List<Pair<String, List<ToolDefinition>>> {
         val visible = visibleTools(k0ReaderEnabled, gatewaysEnabled, signalReaderEnabled, aresEnabled, fieldNotesEnabled)
         return listOf(
-            "Available Local Tools" to visible.filter {
-                it.hubSection == ToolHubSection.LOCAL_TOOLS ||
-                    (it.classification == ToolClassification.LOCAL_ONLY &&
-                        it.status == ToolStatus.Available &&
-                        it.hubSection == null &&
-                        it.id != "gateways")
+            "Available" to visible.filter {
+                it.status == ToolStatus.Available &&
+                    it.classification == ToolClassification.LOCAL_ONLY &&
+                    it.id != "accessibility"
             },
-            "Hades Watch Web Shortcuts" to visible.filter {
-                it.hubSection == ToolHubSection.WEB_SHORTCUT ||
-                    it.classification == ToolClassification.WEB_SHORTCUT
-            },
-            "Self-Hosted / Gateway Tools" to visible.filter {
-                it.hubSection == ToolHubSection.SELF_HOSTED_GATEWAY ||
-                    (it.id == "gateways" && it.status == ToolStatus.Available)
-            },
-            "Permission-Gated Future Tools" to visible.filter {
-                it.hubSection == ToolHubSection.PERMISSION_GATED &&
-                    it.classification == ToolClassification.PERMISSION_GATED
+            "Website Shortcuts" to visible.filter {
+                it.classification == ToolClassification.WEB_SHORTCUT
             },
             "Coming Soon" to visible.filter {
-                it.status == ToolStatus.ComingSoon && it.hubSection != ToolHubSection.PERMISSION_GATED
+                it.status == ToolStatus.ComingSoon ||
+                    it.classification == ToolClassification.PERMISSION_GATED
+            },
+            "Support" to visible.filter {
+                it.id == "accessibility" || it.status == ToolStatus.SettingsShortcut
             },
         ).filter { it.second.isNotEmpty() }
     }

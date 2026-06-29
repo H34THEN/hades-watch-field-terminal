@@ -1,7 +1,6 @@
 package com.heathen.hadeswatch
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -51,14 +50,14 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     bottomNavItems = HadesDestination.bottomNavItems,
-                ) { modifier ->
+                ) {
                     HadesNavGraph(
                         navController = navController,
                         settingsRepository = app.settingsRepository,
                         sessionManager = app.sessionManager,
-                    gatewayRepository = app.gatewayRepository,
-                    signalSnippetRepository = app.signalSnippetRepository,
-                )
+                        gatewayRepository = app.gatewayRepository,
+                        signalSnippetRepository = app.signalSnippetRepository,
+                    )
                 }
             }
         }
@@ -67,9 +66,6 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        resolveDeepLink(intent)?.let { route ->
-            // Deep links on warm start handled on next composition via intent update
-        }
     }
 
     private fun resolveDeepLink(intent: Intent): String? {

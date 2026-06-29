@@ -1,28 +1,31 @@
 package com.heathen.hadeswatch.core.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class HadesDestination(
     val route: String,
     val label: String,
     val icon: ImageVector? = null,
+    val tabRoute: String = route,
 ) {
     data object Home : HadesDestination("home", "Home", Icons.Default.Home)
-    data object Mmo : HadesDestination("mmo", "MMO", Icons.Default.Visibility)
-    data object DeadDrops : HadesDestination("dead_drops", "Dead Drops")
-    data object Forums : HadesDestination("forums", "Forums", Icons.Default.Chat)
-    data object Profile : HadesDestination("profile", "Profile", Icons.Default.Person)
+    data object WebHub : HadesDestination("web?url={url}", "Web", Icons.Default.Language, tabRoute = "web")
     data object Tools : HadesDestination("tools", "Tools", Icons.Default.Build)
-    data object Notifications : HadesDestination("notifications", "Alerts", Icons.Default.Notifications)
+    data object Reader : HadesDestination("reader", "Reader", Icons.AutoMirrored.Filled.MenuBook)
     data object Settings : HadesDestination("settings", "Settings", Icons.Default.Settings)
+
+    // Legacy web sub-routes (deep links / internal navigation)
+    data object Mmo : HadesDestination("mmo", "MMO")
+    data object DeadDrops : HadesDestination("dead_drops", "Dead Drops")
+    data object Forums : HadesDestination("forums", "Forums")
+    data object Profile : HadesDestination("profile", "Profile")
+    data object Notifications : HadesDestination("notifications", "Alerts")
 
     data object WebShell : HadesDestination("web/{url}", "Web")
     data object K0Reader : HadesDestination("tools/k0reader", "k0R34DER")
@@ -41,7 +44,10 @@ sealed class HadesDestination(
     data object FutureApiStatus : HadesDestination("settings/future-api", "Future API Status")
 
     companion object {
-        val bottomNavItems = listOf(Home, Mmo, DeadDrops, Forums, Profile, Tools, Notifications, Settings)
+        val bottomNavItems = listOf(Home, WebHub, Tools, Reader, Settings)
+
+        fun webHubRoute(url: String = WebRoutes.DASHBOARD): String =
+            "web?url=${java.net.URLEncoder.encode(url, Charsets.UTF_8.name())}"
 
         fun webRoute(url: String): String = "web/${java.net.URLEncoder.encode(url, Charsets.UTF_8.name())}"
 
@@ -56,15 +62,16 @@ sealed class HadesDestination(
         fun signalSnippetDetailRoute(snippetId: String): String = "tools/signalreader/detail/$snippetId"
 
         fun deepLinkRoute(schemePath: String): String? = when (schemePath.lowercase()) {
-            "dashboard" -> webRoute(WebRoutes.DASHBOARD)
-            "mmo" -> Mmo.route
-            "dead-drops", "deaddrops" -> DeadDrops.route
-            "forums" -> Forums.route
-            "profile" -> Profile.route
+            "dashboard" -> webHubRoute(WebRoutes.DASHBOARD)
+            "mmo" -> webHubRoute(WebRoutes.MMO)
+            "dead-drops", "deaddrops" -> webHubRoute(WebRoutes.DEAD_DROPS)
+            "forums" -> webHubRoute(WebRoutes.FORUMS)
+            "profile" -> webHubRoute(WebRoutes.PROFILE_DOSSIER)
             "tools" -> Tools.route
-            "notifications" -> Notifications.route
+            "reader", "k0reader" -> Reader.route
+            "notifications" -> webHubRoute(WebRoutes.NOTIFICATIONS)
             "settings" -> Settings.route
-            "login" -> webRoute(WebRoutes.LOGIN)
+            "login" -> webHubRoute(WebRoutes.LOGIN)
             else -> null
         }
     }
@@ -90,3 +97,18 @@ object WebRoutes {
     const val NOTIFICATIONS = "$BASE/notifications"
     const val LOGIN = "$BASE/login"
 }
+
+data class WebRouteOption(
+    val label: String,
+    val url: String,
+    val iconKey: com.heathen.hadeswatch.core.ui.ToolIconKey,
+)
+
+val primaryWebRoutes = listOf(
+    WebRouteOption("Dashboard", WebRoutes.DASHBOARD, com.heathen.hadeswatch.core.ui.ToolIconKey.DASHBOARD),
+    WebRouteOption("MMO", WebRoutes.MMO, com.heathen.hadeswatch.core.ui.ToolIconKey.MMO),
+    WebRouteOption("Dead Drops", WebRoutes.DEAD_DROPS, com.heathen.hadeswatch.core.ui.ToolIconKey.DEAD_DROP),
+    WebRouteOption("Forums", WebRoutes.FORUMS, com.heathen.hadeswatch.core.ui.ToolIconKey.FORUMS),
+    WebRouteOption("Profile", WebRoutes.PROFILE_DOSSIER, com.heathen.hadeswatch.core.ui.ToolIconKey.PROFILE),
+    WebRouteOption("Notifications", WebRoutes.NOTIFICATIONS, com.heathen.hadeswatch.core.ui.ToolIconKey.NOTIFICATIONS),
+)

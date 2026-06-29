@@ -15,6 +15,8 @@ Official Android companion app for [Hades Watch](https://hadeswatch.com).
 | Signal Reader + JSON import/export | Done |
 | Underworld Gateways + isolated viewer | Done |
 | Tools Hub polish (grouped, search, chips) | Done |
+| UI/UX rebuild (5-tab nav, design system) | Done |
+| k0R34DER reader experience upgrade | Done |
 | Local Tool Data management screen | Done |
 | Future API scaffolds (no live calls) | Done |
 | Field Notes, 4R3S placeholder | Done |
@@ -86,6 +88,12 @@ No storage, location, Bluetooth, camera, or mic permissions.
 
 See [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for the full checklist.
 
+### Navigation (5 tabs)
+
+- Home, Web, Tools, Reader, Settings — each with icon + label
+- Web tab route selector (Dashboard, MMO, Dead Drops, Forums, Profile, Notifications)
+- Reader tab opens k0R34DER directly
+
 ## Docs
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
@@ -96,6 +104,7 @@ See [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for the full checklist.
 - [docs/K0R34D3R_PARITY_TESTS.md](docs/K0R34D3R_PARITY_TESTS.md)
 - [docs/FUTURE_API_ENDPOINTS.md](docs/FUTURE_API_ENDPOINTS.md)
 - [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md)
+- [docs/UI_UX_REBUILD.md](docs/UI_UX_REBUILD.md)
 - [docs/TOOLS_ARCHITECTURE.md](docs/TOOLS_ARCHITECTURE.md)
 
 ## Known Limitations

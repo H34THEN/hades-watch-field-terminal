@@ -39,7 +39,12 @@ import androidx.compose.ui.unit.dp
 import com.heathen.hadeswatch.core.theme.MutedText
 import com.heathen.hadeswatch.core.theme.SignalCyan
 import com.heathen.hadeswatch.core.theme.TerminalGreen
+import com.heathen.hadeswatch.core.ui.HadesEmptyState
+import com.heathen.hadeswatch.core.ui.HadesIcon
+import com.heathen.hadeswatch.core.ui.HadesSearchBar
+import com.heathen.hadeswatch.core.ui.HadesSectionHeader
 import com.heathen.hadeswatch.core.ui.HadesTerminalCard
+import com.heathen.hadeswatch.core.ui.ToolIconKey
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -186,15 +191,20 @@ fun SignalReaderScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    HadesIcon(key = ToolIconKey.SIGNAL, contentDescription = "Signal Reader")
+                    Text(
+                        text = "Signal Reader",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = SignalCyan,
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
+                }
                 Text(
-                    text = "Signal Reader",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = SignalCyan,
-                )
-                Text(
-                    text = "Local snippet library — manually saved text only. No scraping.",
+                    text = "Local snippet library — manually saved text only.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MutedText,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
                 Row(
                     modifier = Modifier.padding(top = 8.dp),
@@ -224,25 +234,25 @@ fun SignalReaderScreen(
                         Text("Import", modifier = Modifier.padding(start = 4.dp))
                     }
                 }
-                OutlinedTextField(
+                HadesSearchBar(
                     value = query,
                     onValueChange = { query = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    label = { Text("Search snippets") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    singleLine = true,
+                    placeholder = "Search snippets",
+                    modifier = Modifier.padding(top = 12.dp),
                 )
             }
             if (filtered.isEmpty()) {
                 item {
-                    HadesTerminalCard(title = "No snippets") {
-                        Text(
-                            text = "Save lore, transmissions, or copied text you want to keep locally.",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
+                    HadesEmptyState(
+                        title = "No snippets",
+                        message = "Tap + to save lore, transmissions, or copied text locally.",
+                        action = {
+                            com.heathen.hadeswatch.core.ui.HadesPrimaryButton(
+                                text = "Add snippet",
+                                onClick = onAddSnippet,
+                            )
+                        },
+                    )
                 }
             }
             items(filtered, key = { it.id }) { snippet ->

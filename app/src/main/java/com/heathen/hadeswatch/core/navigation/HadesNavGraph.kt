@@ -19,7 +19,6 @@ import com.heathen.hadeswatch.features.gateways.UnderworldGatewaysScreen
 import com.heathen.hadeswatch.features.gateways.viewer.GenericGatewayViewerScreen
 import com.heathen.hadeswatch.features.home.HomeScreen
 import com.heathen.hadeswatch.features.k0reader.K0ReaderScreen
-import com.heathen.hadeswatch.features.notifications.NotificationsScreen
 import com.heathen.hadeswatch.features.settings.FutureApiStatusScreen
 import com.heathen.hadeswatch.features.settings.LocalToolDataScreen
 import com.heathen.hadeswatch.features.settings.PrivacySafetyScreen
@@ -29,6 +28,7 @@ import com.heathen.hadeswatch.features.signalreader.SignalReaderScreen
 import com.heathen.hadeswatch.features.signalreader.SignalSnippetEditorScreen
 import com.heathen.hadeswatch.features.signalreader.SignalSnippetRepository
 import com.heathen.hadeswatch.features.tools.ToolsHubScreen
+import com.heathen.hadeswatch.features.web.WebHubScreen
 import com.heathen.hadeswatch.features.webshell.WebShellScreen
 import java.net.URLDecoder
 
@@ -58,19 +58,28 @@ fun HadesNavGraph(
         startDestination = startDestination,
     ) {
         composable(HadesDestination.Home.route) {
-            HomeScreen(onNavigateToWeb = { navController.navigate(it) })
+            HomeScreen(
+                onNavigate = { navController.navigate(it) },
+                onNavigateToWebRoute = { url ->
+                    navController.navigate(HadesDestination.webHubRoute(url))
+                },
+            )
         }
-        composable(HadesDestination.Mmo.route) {
-            WebShellScreen(url = WebRoutes.MMO, openExternalInBrowser = openExternal)
-        }
-        composable(HadesDestination.DeadDrops.route) {
-            WebShellScreen(url = WebRoutes.DEAD_DROPS, openExternalInBrowser = openExternal)
-        }
-        composable(HadesDestination.Forums.route) {
-            WebShellScreen(url = WebRoutes.FORUMS, openExternalInBrowser = openExternal)
-        }
-        composable(HadesDestination.Profile.route) {
-            WebShellScreen(url = WebRoutes.PROFILE_DOSSIER, openExternalInBrowser = openExternal)
+        composable(
+            route = HadesDestination.WebHub.route,
+            arguments = listOf(
+                navArgument("url") {
+                    type = NavType.StringType
+                    defaultValue = WebRoutes.DASHBOARD
+                },
+            ),
+        ) { backStackEntry ->
+            val encoded = backStackEntry.arguments?.getString("url").orEmpty()
+            val url = URLDecoder.decode(encoded, Charsets.UTF_8.name())
+            WebHubScreen(
+                openExternalInBrowser = openExternal,
+                initialUrl = url.ifBlank { WebRoutes.DASHBOARD },
+            )
         }
         composable(HadesDestination.Tools.route) {
             ToolsHubScreen(
@@ -80,11 +89,13 @@ fun HadesNavGraph(
                 signalReaderEnabled = signalReaderEnabled,
                 aresEnabled = aresEnabled,
                 fieldNotesEnabled = fieldNotesEnabled,
-                compactMode = !largeText,
             )
         }
-        composable(HadesDestination.Notifications.route) {
-            NotificationsScreen(openExternalInBrowser = openExternal)
+        composable(HadesDestination.Reader.route) {
+            K0ReaderScreen(
+                settingsRepository = settingsRepository,
+                reducedMotion = reducedMotion,
+            )
         }
         composable(HadesDestination.Settings.route) {
             SettingsScreen(
@@ -201,8 +212,7 @@ fun HadesNavGraph(
                 snippetId = snippetId,
                 onEdit = { navController.navigate(HadesDestination.signalSnippetEditorRoute(snippetId)) },
                 onReadInK0Reader = {
-                    navController.navigate(HadesDestination.K0Reader.route) {
-                        popUpTo(HadesDestination.Tools.route) { saveState = true }
+                    navController.navigate(HadesDestination.Reader.route) {
                         launchSingleTop = true
                     }
                 },
@@ -227,19 +237,4 @@ fun HadesNavGraph(
             )
         }
     }
-}
-
-fun routeForBottomNav(route: String?): String = when {
-    route?.startsWith("web/") == true -> HadesDestination.Home.route
-    route == HadesDestination.K0Reader.route -> HadesDestination.Tools.route
-    route == HadesDestination.Ares.route -> HadesDestination.Tools.route
-    route == HadesDestination.FieldNotes.route -> HadesDestination.Tools.route
-    route == HadesDestination.UnderworldGateways.route -> HadesDestination.Tools.route
-    route == HadesDestination.SignalReader.route -> HadesDestination.Tools.route
-    route?.startsWith("tools/gateways/") == true -> HadesDestination.Tools.route
-    route?.startsWith("tools/signalreader/") == true -> HadesDestination.Tools.route
-    route == HadesDestination.PrivacySafety.route -> HadesDestination.Settings.route
-    route == HadesDestination.LocalToolData.route -> HadesDestination.Settings.route
-    route == HadesDestination.FutureApiStatus.route -> HadesDestination.Settings.route
-    else -> route ?: HadesDestination.Home.route
 }

@@ -12,6 +12,7 @@ class LocalK0ReaderAdapter : K0ReaderAdapter {
     override fun reset() = engine.reset()
     override fun tokenCount(): Int = engine.tokenCount()
     override fun currentIndex(): Int = engine.currentIndex()
+    override fun tokenAt(index: Int): String? = engine.tokenAt(index)
     override fun rewind(steps: Int) = engine.rewind(steps)
     override fun intervalMillis(): Long = engine.intervalMillis()
     override fun progressPercent(): Float {

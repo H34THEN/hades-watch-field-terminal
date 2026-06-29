@@ -1,21 +1,31 @@
 package com.heathen.hadeswatch.features.k0reader
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,25 +36,33 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.heathen.hadeswatch.core.settings.AppSettingsRepository
 import com.heathen.hadeswatch.core.theme.MutedText
 import com.heathen.hadeswatch.core.theme.SignalCyan
 import com.heathen.hadeswatch.core.theme.TerminalGreen
+import com.heathen.hadeswatch.core.ui.HadesEmptyState
+import com.heathen.hadeswatch.core.ui.HadesPrimaryButton
+import com.heathen.hadeswatch.core.ui.HadesSecondaryButton
+import com.heathen.hadeswatch.core.ui.HadesSectionHeader
 import com.heathen.hadeswatch.core.ui.HadesTerminalCard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun K0ReaderScreen(
     settingsRepository: AppSettingsRepository,
     reducedMotion: Boolean = false,
 ) {
     val scope = rememberCoroutineScope()
+    val view = LocalView.current
     val prefs = remember { K0ReaderPreferences(settingsRepository) }
     val useSdk by settingsRepository.k0ReaderUseSdkAdapter.collectAsState(initial = true)
     val adapter = rememberDefaultK0ReaderAdapter(useSdk = useSdk)
@@ -52,26 +70,50 @@ fun K0ReaderScreen(
     var inputText by remember { mutableStateOf("") }
     var displayToken by remember { mutableStateOf("") }
     var isPlaying by remember { mutableStateOf(false) }
+    var isLoaded by remember { mutableStateOf(false) }
     var wpm by remember { mutableIntStateOf(300) }
     var chunkSize by remember { mutableIntStateOf(1) }
     var fontSize by remember { mutableIntStateOf(32) }
     var progress by remember { mutableStateOf(0f) }
     var transferSource by remember { mutableStateOf<String?>(null) }
+    var focusMode by remember { mutableStateOf(false) }
+    var punctuationPause by remember { mutableStateOf(true) }
+    var orpEnabled by remember { mutableStateOf(true) }
+    var saveSession by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         wpm = prefs.wpm.first()
         chunkSize = prefs.chunkSize.first()
         fontSize = prefs.fontSize.first()
+        focusMode = prefs.focusMode.first()
+        punctuationPause = prefs.punctuationPause.first()
+        orpEnabled = prefs.orpEnabled.first()
+        saveSession = prefs.saveSession.first()
         ReaderTransferRepository.consumePending()?.let { pending ->
             inputText = pending.text
             transferSource = pending.sourceTitle.takeIf { it.isNotBlank() }
+        } ?: run {
+            if (prefs.saveSession.first()) {
+                val last = prefs.lastText.first()
+                if (last.isNotBlank()) inputText = last
+            }
         }
     }
 
-    LaunchedEffect(isPlaying, wpm, reducedMotion, adapter) {
+    DisposableEffect(isPlaying) {
+        view.keepScreenOn = isPlaying
+        onDispose {
+            view.keepScreenOn = false
+            isPlaying = false
+        }
+    }
+
+    LaunchedEffect(isPlaying, wpm, reducedMotion, punctuationPause, adapter, displayToken) {
         if (!isPlaying || reducedMotion) return@LaunchedEffect
         while (isActive && isPlaying) {
-            delay(adapter.intervalMillis())
+            val pauseMs = computePauseMillis(adapter.intervalMillis(), displayToken, punctuationPause)
+            delay(pauseMs)
             val next = adapter.nextToken()
             if (next == null) {
                 isPlaying = false
@@ -82,6 +124,28 @@ fun K0ReaderScreen(
         }
     }
 
+    fun syncDisplayFromAdapter() {
+        displayToken = adapter.currentToken()
+        progress = adapter.progressPercent()
+        isLoaded = adapter.hasText()
+    }
+
+    fun loadTextIntoReader() {
+        adapter.loadText(inputText)
+        adapter.setWordsPerMinute(wpm)
+        adapter.setChunkSize(chunkSize)
+        adapter.reset()
+        syncDisplayFromAdapter()
+        isPlaying = false
+        if (saveSession && inputText.isNotBlank()) {
+            scope.launch { prefs.saveLastText(inputText) }
+        }
+    }
+
+    val currentIndex = adapter.currentIndex()
+    val prevToken = if (currentIndex > 0) adapter.tokenAt(currentIndex - 1).orEmpty() else ""
+    val nextPreview = adapter.tokenAt(currentIndex + 1).orEmpty()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -89,34 +153,22 @@ fun K0ReaderScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = "k0R34DER",
-            style = MaterialTheme.typography.displayLarge,
-            color = TerminalGreen,
-        )
-        Text(
-            text = "Local RSVP reader — paste text, no upload.",
-            style = MaterialTheme.typography.bodyMedium,
+        HadesSectionHeader(
+            title = "k0R34DER",
+            subtitle = "Local RSVP speed reader — no upload",
         )
         Text(
             text = if (useSdk) "Engine: K0R34D3R Kotlin core" else "Engine: local fallback",
             style = MaterialTheme.typography.bodyMedium,
             color = MutedText,
         )
+
         transferSource?.let { source ->
             HadesTerminalCard(title = "Local transfer") {
-                Text(
-                    text = "Loaded from Signal Reader: $source",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SignalCyan,
-                )
-                Text(
-                    text = "In-memory only — cleared when you clear transfer or restart the app.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MutedText,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-                OutlinedButton(
+                Text("Loaded from Signal Reader: $source", color = SignalCyan)
+                Text("In-memory only — not uploaded.", color = MutedText, modifier = Modifier.padding(top = 4.dp))
+                HadesSecondaryButton(
+                    text = "Clear transfer",
                     onClick = {
                         inputText = ""
                         transferSource = null
@@ -125,129 +177,241 @@ fun K0ReaderScreen(
                         displayToken = ""
                         progress = 0f
                         isPlaying = false
+                        isLoaded = false
                     },
                     modifier = Modifier.padding(top = 8.dp),
-                ) {
-                    Text("Clear transferred text")
-                }
+                )
             }
         }
 
-        OutlinedTextField(
-            value = inputText,
-            onValueChange = { inputText = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Paste text") },
-            minLines = 4,
-        )
-
-        HadesTerminalCard(title = "Display") {
-            Text(
-                text = displayToken.ifBlank { "—" },
-                style = MaterialTheme.typography.displayLarge.copy(fontSize = fontSize.sp),
-                color = SignalCyan,
-                textAlign = TextAlign.Center,
+        HadesTerminalCard(title = "Reader") {
+            if (prevToken.isNotBlank() || nextPreview.isNotBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = prevToken,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MutedText.copy(alpha = 0.6f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = nextPreview,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MutedText.copy(alpha = 0.6f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+            K0OrpTokenDisplay(
+                token = displayToken,
+                fontSize = fontSize.sp,
+                orpEnabled = orpEnabled,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 24.dp),
             )
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                text = "${adapter.currentIndex() + 1} / ${adapter.tokenCount()} " +
-                    "(${ (progress * 100).toInt() }%)",
+                text = if (adapter.tokenCount() > 0) {
+                    "${currentIndex + 1} / ${adapter.tokenCount()} (${(progress * 100).toInt()}%)"
+                } else {
+                    "No text loaded"
+                },
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(top = 8.dp),
             )
         }
 
-        Text("WPM: $wpm")
-        Slider(
-            value = wpm.toFloat(),
-            onValueChange = {
-                wpm = it.toInt()
-                adapter.setWordsPerMinute(wpm)
-                scope.launch { prefs.saveWpm(wpm) }
-            },
-            valueRange = 100f..800f,
-            steps = 13,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            HadesPrimaryButton(
+                text = if (isPlaying) "Pause" else "Start",
+                onClick = {
+                    if (!isLoaded && inputText.isNotBlank()) loadTextIntoReader()
+                    if (adapter.hasText()) isPlaying = !isPlaying
+                },
+                modifier = Modifier.weight(1f),
+                enabled = inputText.isNotBlank() || isLoaded,
+            )
+            HadesSecondaryButton(
+                text = "Rewind",
+                onClick = {
+                    adapter.reset()
+                    syncDisplayFromAdapter()
+                    isPlaying = false
+                },
+                modifier = Modifier.weight(1f),
+            )
+        }
 
-        Text(
-            text = if (chunkSize >= 4) "Chunk: phrase mode" else "Chunk size: $chunkSize word(s)",
-        )
-        Slider(
-            value = chunkSize.toFloat(),
-            onValueChange = {
-                chunkSize = it.toInt()
-                adapter.setChunkSize(chunkSize)
-                scope.launch { prefs.saveChunkSize(chunkSize) }
-            },
-            valueRange = 1f..4f,
-            steps = 2,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            HadesSecondaryButton(
+                text = "Previous",
+                onClick = {
+                    adapter.previousToken()?.let {
+                        displayToken = it
+                        progress = adapter.progressPercent()
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                enabled = isLoaded,
+            )
+            HadesSecondaryButton(
+                text = "Next",
+                onClick = {
+                    adapter.nextToken()?.let {
+                        displayToken = it
+                        progress = adapter.progressPercent()
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                enabled = isLoaded,
+            )
+        }
 
-        Text("Font size: $fontSize")
-        Slider(
-            value = fontSize.toFloat(),
-            onValueChange = {
-                fontSize = it.toInt()
-                scope.launch { prefs.saveFontSize(fontSize) }
-            },
-            valueRange = 24f..48f,
-            steps = 5,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HadesSecondaryButton(
+                text = "Slower",
+                onClick = {
+                    wpm = (wpm - 25).coerceAtLeast(100)
+                    adapter.setWordsPerMinute(wpm)
+                    scope.launch { prefs.saveWpm(wpm) }
+                },
+                modifier = Modifier.weight(1f),
+            )
+            Text("$wpm WPM", style = MaterialTheme.typography.titleMedium, color = TerminalGreen)
+            HadesSecondaryButton(
+                text = "Faster",
+                onClick = {
+                    wpm = (wpm + 25).coerceAtMost(800)
+                    adapter.setWordsPerMinute(wpm)
+                    scope.launch { prefs.saveWpm(wpm) }
+                },
+                modifier = Modifier.weight(1f),
+            )
+        }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = {
-                adapter.loadText(inputText)
-                adapter.reset()
-                displayToken = adapter.currentToken()
-                progress = adapter.progressPercent()
-            }) {
-                Text("Load")
-            }
-            Button(onClick = { isPlaying = !isPlaying }) {
-                Text(if (isPlaying) "Pause" else "Start")
-            }
-            OutlinedButton(onClick = {
-                adapter.rewind()
-                displayToken = adapter.currentToken()
-                progress = adapter.progressPercent()
-            }) {
-                Text("Rewind")
+        AnimatedVisibility(visible = !focusMode || !isPlaying) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Paste or edit text") },
+                    minLines = 3,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HadesPrimaryButton(text = "Load text", onClick = { loadTextIntoReader() })
+                    HadesSecondaryButton(text = "Clear", onClick = {
+                        inputText = ""
+                        adapter.loadText("")
+                        displayToken = ""
+                        progress = 0f
+                        isLoaded = false
+                        isPlaying = false
+                        scope.launch { prefs.clearSession() }
+                    })
+                }
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = {
-                adapter.previousToken()?.let {
-                    displayToken = it
-                    progress = adapter.progressPercent()
+        AnimatedVisibility(visible = showSettings && (!focusMode || !isPlaying)) {
+            HadesTerminalCard(title = "Settings") {
+                Text("Words per minute: $wpm")
+                Slider(
+                    value = wpm.toFloat(),
+                    onValueChange = {
+                        wpm = it.toInt()
+                        adapter.setWordsPerMinute(wpm)
+                        scope.launch { prefs.saveWpm(wpm) }
+                    },
+                    valueRange = 100f..800f,
+                    steps = 13,
+                )
+                Text("Chunk mode", modifier = Modifier.padding(top = 8.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(1 to "1 word", 2 to "2 words", 3 to "3 words", 4 to "Phrase").forEach { (size, label) ->
+                        FilterChip(
+                            selected = chunkSize == size,
+                            onClick = {
+                                chunkSize = size
+                                adapter.setChunkSize(size)
+                                scope.launch { prefs.saveChunkSize(size) }
+                                if (isLoaded) syncDisplayFromAdapter()
+                            },
+                            label = { Text(label) },
+                        )
+                    }
                 }
-            }) {
-                Text("Prev")
-            }
-            OutlinedButton(onClick = {
-                adapter.nextToken()?.let {
-                    displayToken = it
-                    progress = adapter.progressPercent()
+                Text("Font size: $fontSize", modifier = Modifier.padding(top = 8.dp))
+                Slider(
+                    value = fontSize.toFloat(),
+                    onValueChange = {
+                        fontSize = it.toInt()
+                        scope.launch { prefs.saveFontSize(fontSize) }
+                    },
+                    valueRange = 24f..56f,
+                    steps = 7,
+                )
+                SettingToggle("Focus mode (hide input while playing)", focusMode) {
+                    focusMode = it
+                    scope.launch { prefs.saveFocusMode(it) }
                 }
-            }) {
-                Text("Next")
-            }
-            OutlinedButton(onClick = {
-                adapter.reset()
-                displayToken = adapter.currentToken()
-                progress = adapter.progressPercent()
-                isPlaying = false
-            }) {
-                Text("Reset")
+                SettingToggle("Punctuation pause", punctuationPause) {
+                    punctuationPause = it
+                    scope.launch { prefs.savePunctuationPause(it) }
+                }
+                SettingToggle("ORP focus highlight", orpEnabled) {
+                    orpEnabled = it
+                    scope.launch { prefs.saveOrpEnabled(it) }
+                }
+                SettingToggle("Save last text locally", saveSession) {
+                    saveSession = it
+                    scope.launch { prefs.saveSaveSession(it) }
+                }
             }
         }
+
+        if (inputText.isBlank() && !isLoaded) {
+            HadesEmptyState(
+                title = "No reading text",
+                message = "Paste lore, forum copy, or open a snippet from Signal Reader.",
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingToggle(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

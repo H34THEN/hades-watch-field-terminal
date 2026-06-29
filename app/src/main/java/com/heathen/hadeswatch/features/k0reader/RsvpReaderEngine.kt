@@ -48,6 +48,8 @@ class RsvpReaderEngine : K0ReaderAdapter {
 
     override fun currentIndex(): Int = index
 
+    override fun tokenAt(index: Int): String? = tokens.getOrNull(index)
+
     override fun rewind(steps: Int) {
         index = (index - steps).coerceAtLeast(0)
     }

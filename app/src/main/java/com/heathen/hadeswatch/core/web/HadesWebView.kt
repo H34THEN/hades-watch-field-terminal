@@ -28,6 +28,7 @@ fun HadesWebView(
     modifier: Modifier = Modifier,
     openExternalUrl: (String) -> Unit,
     onCanGoBackChanged: (Boolean) -> Unit = {},
+    onCanGoForwardChanged: (Boolean) -> Unit = {},
     onLoadingChanged: (Boolean) -> Unit = {},
     onProgressChanged: (Int) -> Unit = {},
     onError: () -> Unit = {},
@@ -90,6 +91,7 @@ fun HadesWebView(
                     onPageFinished = {
                         onLoadingChanged(false)
                         onCanGoBackChanged(canGoBack())
+                        onCanGoForwardChanged(canGoForward())
                     },
                     onError = onError,
                 )

@@ -17,4 +17,9 @@ object SettingsKeys {
     const val K0READER_WPM = "k0reader_wpm"
     const val K0READER_CHUNK_SIZE = "k0reader_chunk_size"
     const val K0READER_FONT_SIZE = "k0reader_font_size"
+    const val K0READER_FOCUS_MODE = "k0reader_focus_mode"
+    const val K0READER_PUNCTUATION_PAUSE = "k0reader_punctuation_pause"
+    const val K0READER_ORP_ENABLED = "k0reader_orp_enabled"
+    const val K0READER_SAVE_SESSION = "k0reader_save_session"
+    const val K0READER_LAST_TEXT = "k0reader_last_text"
 }

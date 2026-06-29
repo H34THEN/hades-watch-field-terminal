@@ -41,7 +41,12 @@ import com.heathen.hadeswatch.core.theme.MutedText
 import com.heathen.hadeswatch.core.theme.OracularViolet
 import com.heathen.hadeswatch.core.theme.TerminalGreen
 import com.heathen.hadeswatch.core.theme.WarningAmber
+import com.heathen.hadeswatch.core.ui.HadesEmptyState
+import com.heathen.hadeswatch.core.ui.HadesIcon
+import com.heathen.hadeswatch.core.ui.HadesSectionHeader
 import com.heathen.hadeswatch.core.ui.HadesTerminalCard
+import com.heathen.hadeswatch.core.ui.HadesWarningBox
+import com.heathen.hadeswatch.core.ui.ToolIconKey
 import kotlinx.coroutines.launch
 
 @Composable
@@ -163,15 +168,20 @@ fun UnderworldGatewaysScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    HadesIcon(key = ToolIconKey.GATEWAY, contentDescription = "Gateways")
+                    Text(
+                        text = "Underworld Gateways",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = OracularViolet,
+                        modifier = Modifier.padding(start = 12.dp),
+                    )
+                }
                 Text(
-                    text = "Underworld Gateways",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = OracularViolet,
-                )
-                Text(
-                    text = "NAS & homelab panel — separate from Hades Watch WebView.",
+                    text = "NAS & homelab panel — separate from Hades Watch WebShell.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MutedText,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
                 Row(
                     modifier = Modifier.padding(top = 8.dp),
@@ -205,12 +215,10 @@ fun UnderworldGatewaysScreen(
 
             if (gateways.isEmpty()) {
                 item {
-                    HadesTerminalCard(title = "No gateways") {
-                        Text(
-                            text = "Add Jellyfin, Home Assistant, NAS dashboards, or trusted local URLs.",
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
+                    HadesEmptyState(
+                        title = "No gateways yet",
+                        message = "Add trusted local services such as Jellyfin, Home Assistant, NAS dashboards, MeTube, or slskd.",
+                    )
                 }
             }
 

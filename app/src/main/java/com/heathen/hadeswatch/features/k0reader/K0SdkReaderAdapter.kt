@@ -19,6 +19,7 @@ class K0SdkReaderAdapter(
     override fun reset() = core.reset()
     override fun tokenCount(): Int = core.tokenCount()
     override fun currentIndex(): Int = core.currentIndex()
+    override fun tokenAt(index: Int): String? = core.readingState().tokens.getOrNull(index)
     override fun rewind(steps: Int) = core.rewind(steps)
     override fun intervalMillis(): Long = core.intervalMillis()
     override fun progressPercent(): Float = core.progressPercent()

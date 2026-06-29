@@ -10,6 +10,7 @@ interface K0ReaderAdapter {
     fun reset()
     fun tokenCount(): Int
     fun currentIndex(): Int
+    fun tokenAt(index: Int): String?
     fun rewind(steps: Int = 10)
     fun intervalMillis(): Long
     fun progressPercent(): Float

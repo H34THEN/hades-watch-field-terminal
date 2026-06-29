@@ -2,6 +2,15 @@
 
 Use this checklist after builds or milestone changes.
 
+## Navigation (5-tab model)
+
+- [ ] Bottom nav shows: Home, Web, Tools, Reader, Settings — each with icon + label
+- [ ] Selected tab is visually obvious
+- [ ] No label overlap on small phone width
+- [ ] Web tab opens route selector + WebShell
+- [ ] Reader tab opens k0R34DER directly
+- [ ] Tool sub-screens highlight Tools tab in bottom nav
+
 ## Hades Watch WebShell
 
 - [ ] MMO tab loads `https://hadeswatch.com/mmo`
@@ -11,11 +20,16 @@ Use this checklist after builds or milestone changes.
 
 ## k0R34DER
 
-- [ ] Paste text, Load, Start, Pause
-- [ ] Chunk sizes 1–3 and phrase mode (4+)
-- [ ] Signal Reader handoff shows “Loaded from Signal Reader: …”
-- [ ] Clear transferred text works
-- [ ] K0R34D3R Kotlin core vs local fallback toggle (Settings)
+- [ ] Reader tab opens k0R34DER
+- [ ] Start/Pause auto-advances tokens
+- [ ] WPM slider and faster/slower buttons work
+- [ ] Chunk mode chips (1/2/3/Phrase) work
+- [ ] ORP highlight toggle works
+- [ ] Punctuation pause toggle works
+- [ ] Focus mode hides input while playing
+- [ ] Signal Reader handoff loads text with source label
+- [ ] Clear transfer / clear text works
+- [ ] Optional save last text locally (Settings toggles in reader)
 
 ## Signal Reader
 

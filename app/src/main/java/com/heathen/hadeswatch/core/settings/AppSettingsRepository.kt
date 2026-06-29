@@ -28,6 +28,11 @@ class AppSettingsRepository(private val context: Context) {
         val K0READER_WPM = intPreferencesKey(SettingsKeys.K0READER_WPM)
         val K0READER_CHUNK = intPreferencesKey(SettingsKeys.K0READER_CHUNK_SIZE)
         val K0READER_FONT = intPreferencesKey(SettingsKeys.K0READER_FONT_SIZE)
+        val K0READER_FOCUS = booleanPreferencesKey(SettingsKeys.K0READER_FOCUS_MODE)
+        val K0READER_PUNCT_PAUSE = booleanPreferencesKey(SettingsKeys.K0READER_PUNCTUATION_PAUSE)
+        val K0READER_ORP = booleanPreferencesKey(SettingsKeys.K0READER_ORP_ENABLED)
+        val K0READER_SAVE_SESSION = booleanPreferencesKey(SettingsKeys.K0READER_SAVE_SESSION)
+        val K0READER_LAST_TEXT = stringPreferencesKey(SettingsKeys.K0READER_LAST_TEXT)
     }
 
     val reducedMotion: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.REDUCED_MOTION] ?: false }
@@ -48,6 +53,12 @@ class AppSettingsRepository(private val context: Context) {
     val k0ReaderWpm: Flow<Int> = context.settingsDataStore.data.map { it[Keys.K0READER_WPM] ?: 300 }
     val k0ReaderChunkSize: Flow<Int> = context.settingsDataStore.data.map { it[Keys.K0READER_CHUNK] ?: 1 }
     val k0ReaderFontSize: Flow<Int> = context.settingsDataStore.data.map { it[Keys.K0READER_FONT] ?: 32 }
+    val k0ReaderFocusMode: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.K0READER_FOCUS] ?: false }
+    val k0ReaderPunctuationPause: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[Keys.K0READER_PUNCT_PAUSE] ?: true }
+    val k0ReaderOrpEnabled: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.K0READER_ORP] ?: true }
+    val k0ReaderSaveSession: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.K0READER_SAVE_SESSION] ?: false }
+    val k0ReaderLastText: Flow<String> = context.settingsDataStore.data.map { it[Keys.K0READER_LAST_TEXT] ?: "" }
 
     suspend fun setReducedMotion(value: Boolean) = setBoolean(Keys.REDUCED_MOTION, value)
     suspend fun setHighContrast(value: Boolean) = setBoolean(Keys.HIGH_CONTRAST, value)
@@ -63,6 +74,11 @@ class AppSettingsRepository(private val context: Context) {
     suspend fun setK0ReaderWpm(value: Int) = setInt(Keys.K0READER_WPM, value)
     suspend fun setK0ReaderChunkSize(value: Int) = setInt(Keys.K0READER_CHUNK, value)
     suspend fun setK0ReaderFontSize(value: Int) = setInt(Keys.K0READER_FONT, value)
+    suspend fun setK0ReaderFocusMode(value: Boolean) = setBoolean(Keys.K0READER_FOCUS, value)
+    suspend fun setK0ReaderPunctuationPause(value: Boolean) = setBoolean(Keys.K0READER_PUNCT_PAUSE, value)
+    suspend fun setK0ReaderOrpEnabled(value: Boolean) = setBoolean(Keys.K0READER_ORP, value)
+    suspend fun setK0ReaderSaveSession(value: Boolean) = setBoolean(Keys.K0READER_SAVE_SESSION, value)
+    suspend fun setK0ReaderLastText(value: String) = setString(Keys.K0READER_LAST_TEXT, value)
 
     suspend fun clearLocalToolData() {
         context.settingsDataStore.edit { prefs ->
@@ -72,6 +88,11 @@ class AppSettingsRepository(private val context: Context) {
             prefs.remove(Keys.K0READER_WPM)
             prefs.remove(Keys.K0READER_CHUNK)
             prefs.remove(Keys.K0READER_FONT)
+            prefs.remove(Keys.K0READER_FOCUS)
+            prefs.remove(Keys.K0READER_PUNCT_PAUSE)
+            prefs.remove(Keys.K0READER_ORP)
+            prefs.remove(Keys.K0READER_SAVE_SESSION)
+            prefs.remove(Keys.K0READER_LAST_TEXT)
         }
     }
 
@@ -92,6 +113,17 @@ class AppSettingsRepository(private val context: Context) {
             prefs.remove(Keys.K0READER_WPM)
             prefs.remove(Keys.K0READER_CHUNK)
             prefs.remove(Keys.K0READER_FONT)
+            prefs.remove(Keys.K0READER_FOCUS)
+            prefs.remove(Keys.K0READER_PUNCT_PAUSE)
+            prefs.remove(Keys.K0READER_ORP)
+            prefs.remove(Keys.K0READER_SAVE_SESSION)
+            prefs.remove(Keys.K0READER_LAST_TEXT)
+        }
+    }
+
+    suspend fun clearK0ReaderSession() {
+        context.settingsDataStore.edit { prefs ->
+            prefs.remove(Keys.K0READER_LAST_TEXT)
         }
     }
 
