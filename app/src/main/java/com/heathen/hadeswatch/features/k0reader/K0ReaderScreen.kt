@@ -56,6 +56,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+
+/** Keep paste field small — full EPUB text must never be bound to [OutlinedTextField]. */
+private const val MAX_PASTE_FIELD_CHARS = 20_000
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -94,16 +99,23 @@ fun K0ReaderScreen(
         isLoaded = adapter.hasText()
     }
 
-    fun loadTextIntoReader() {
-        adapter.loadText(inputText)
+    fun loadTextIntoReader(text: String = inputText) {
+        adapter.loadText(text)
         adapter.setWordsPerMinute(wpm)
         adapter.setChunkSize(chunkSize)
         adapter.reset()
         syncDisplayFromAdapter()
         isPlaying = false
-        if (saveSession && inputText.isNotBlank()) {
-            scope.launch { prefs.saveLastText(inputText) }
+        if (saveSession && text.isNotBlank()) {
+            scope.launch { prefs.saveLastText(text) }
         }
+    }
+
+    fun loadImportedBook(title: String, plainText: String) {
+        epubTitle = title
+        transferSource = null
+        inputText = ""
+        loadTextIntoReader(plainText)
     }
 
     val epubPicker = rememberLauncherForActivityResult(
@@ -122,14 +134,15 @@ fun K0ReaderScreen(
                 // ephemeral read is fine for one session
             }
             try {
-                val result = EpubDocumentLoader.loadFromUri(context, uri)
-                inputText = result.plainText
-                epubTitle = result.title
-                transferSource = null
-                loadTextIntoReader()
+                val result = withContext(Dispatchers.IO) {
+                    EpubDocumentLoader.loadFromUri(context, uri)
+                }
+                loadImportedBook(result.title, result.plainText)
             } catch (e: EpubImportException) {
                 epubError = e.message
-            } catch (e: Exception) {
+            } catch (e: OutOfMemoryError) {
+                epubError = "This EPUB is too large for available memory."
+            } catch (_: Exception) {
                 epubError = "Unable to import EPUB."
             } finally {
                 isParsingEpub = false
@@ -146,12 +159,22 @@ fun K0ReaderScreen(
         orpEnabled = prefs.orpEnabled.first()
         saveSession = prefs.saveSession.first()
         ReaderTransferRepository.consumePending()?.let { pending ->
-            inputText = pending.text
+            if (pending.text.length > MAX_PASTE_FIELD_CHARS) {
+                loadTextIntoReader(pending.text)
+            } else {
+                inputText = pending.text
+            }
             transferSource = pending.sourceTitle.takeIf { it.isNotBlank() }
         } ?: run {
             if (prefs.saveSession.first()) {
                 val last = prefs.lastText.first()
-                if (last.isNotBlank()) inputText = last
+                if (last.isNotBlank()) {
+                    if (last.length > MAX_PASTE_FIELD_CHARS) {
+                        loadTextIntoReader(last)
+                    } else {
+                        inputText = last
+                    }
+                }
             }
         }
     }
@@ -421,11 +444,37 @@ fun K0ReaderScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = inputText,
-                    onValueChange = { inputText = it },
+                    onValueChange = { draft ->
+                        if (draft.length <= MAX_PASTE_FIELD_CHARS) {
+                            inputText = draft
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Paste or edit text") },
+                    label = {
+                        Text(
+                            if (epubTitle != null) {
+                                "Paste new text to replace EPUB"
+                            } else {
+                                "Paste or edit text"
+                            },
+                        )
+                    },
+                    placeholder = {
+                        if (epubTitle != null) {
+                            Text("Book loaded from EPUB — paste here to replace")
+                        }
+                    },
                     minLines = 3,
+                    maxLines = 8,
+                    enabled = !isParsingEpub,
                 )
+                if (inputText.length >= MAX_PASTE_FIELD_CHARS) {
+                    Text(
+                        "Paste limit reached (${MAX_PASTE_FIELD_CHARS} chars). Use Import EPUB for full books.",
+                        color = MutedText,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     HadesPrimaryButton(text = "Load text", onClick = { loadTextIntoReader() })
                     HadesSecondaryButton(text = "Clear", onClick = {
@@ -499,7 +548,7 @@ fun K0ReaderScreen(
             }
         }
 
-        if (inputText.isBlank() && !isLoaded) {
+        if (inputText.isBlank() && !isLoaded && epubTitle == null) {
             HadesEmptyState(
                 title = "No reading text",
                 message = "Paste lore, import an EPUB, or open a snippet from Signal Reader.",
