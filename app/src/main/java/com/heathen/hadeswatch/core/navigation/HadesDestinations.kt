@@ -31,6 +31,11 @@ sealed class HadesDestination(
     data object UnderworldGateways : HadesDestination("tools/gateways", "Gateways")
     data object GatewayEditorNew : HadesDestination("tools/gateways/edit/new", "Add Gateway")
     data object GatewayEditor : HadesDestination("tools/gateways/edit/{gatewayId}", "Edit Gateway")
+    data object GatewayViewer : HadesDestination("tools/gateways/view/{gatewayId}", "Gateway Viewer")
+    data object SignalReader : HadesDestination("tools/signalreader", "Signal Reader")
+    data object SignalSnippetEditorNew : HadesDestination("tools/signalreader/edit/new", "Add Signal")
+    data object SignalSnippetEditor : HadesDestination("tools/signalreader/edit/{snippetId}", "Edit Signal")
+    data object SignalSnippetDetail : HadesDestination("tools/signalreader/detail/{snippetId}", "Signal Detail")
     data object PrivacySafety : HadesDestination("settings/privacy", "Privacy & Safety")
 
     companion object {
@@ -40,6 +45,13 @@ sealed class HadesDestination(
 
         fun gatewayEditorRoute(gatewayId: String? = null): String =
             if (gatewayId.isNullOrBlank()) GatewayEditorNew.route else "tools/gateways/edit/$gatewayId"
+
+        fun gatewayViewerRoute(gatewayId: String): String = "tools/gateways/view/$gatewayId"
+
+        fun signalSnippetEditorRoute(snippetId: String? = null): String =
+            if (snippetId.isNullOrBlank()) SignalSnippetEditorNew.route else "tools/signalreader/edit/$snippetId"
+
+        fun signalSnippetDetailRoute(snippetId: String): String = "tools/signalreader/detail/$snippetId"
 
         fun deepLinkRoute(schemePath: String): String? = when (schemePath.lowercase()) {
             "dashboard" -> webRoute(WebRoutes.DASHBOARD)

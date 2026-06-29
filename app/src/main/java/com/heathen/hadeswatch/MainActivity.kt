@@ -56,8 +56,9 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         settingsRepository = app.settingsRepository,
                         sessionManager = app.sessionManager,
-                        gatewayRepository = app.gatewayRepository,
-                    )
+                    gatewayRepository = app.gatewayRepository,
+                    signalSnippetRepository = app.signalSnippetRepository,
+                )
                 }
             }
         }

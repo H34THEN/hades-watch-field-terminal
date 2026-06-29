@@ -27,12 +27,14 @@ fun ToolsHubScreen(
     onNavigate: (String) -> Unit,
     k0ReaderEnabled: Boolean = true,
     gatewaysEnabled: Boolean = true,
+    signalReaderEnabled: Boolean = true,
     aresEnabled: Boolean = true,
     fieldNotesEnabled: Boolean = true,
 ) {
-    val visibleTools = ToolRegistry.visibleTools(
+    val sections = ToolRegistry.groupedVisibleTools(
         k0ReaderEnabled = k0ReaderEnabled,
         gatewaysEnabled = gatewaysEnabled,
+        signalReaderEnabled = signalReaderEnabled,
         aresEnabled = aresEnabled,
         fieldNotesEnabled = fieldNotesEnabled,
     )
@@ -55,8 +57,18 @@ fun ToolsHubScreen(
                 color = MutedText,
             )
         }
-        items(visibleTools) { tool ->
-            ToolCard(tool = tool, onNavigate = onNavigate)
+        sections.forEach { (sectionTitle, tools) ->
+            item {
+                Text(
+                    text = sectionTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = OracularViolet,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp),
+                )
+            }
+            items(tools) { tool ->
+                ToolCard(tool = tool, onNavigate = onNavigate)
+            }
         }
     }
 }

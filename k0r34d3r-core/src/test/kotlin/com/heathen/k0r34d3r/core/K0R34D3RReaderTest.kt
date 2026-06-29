@@ -21,11 +21,33 @@ class K0R34D3RReaderTest {
     }
 
     @Test
+    fun whitespaceOnlyInput() {
+        val core = reader()
+        core.loadText("   \t\n\n  ")
+        assertEquals(0, core.tokenCount())
+        assertFalse(core.hasText())
+    }
+
+    @Test
+    fun punctuationOnlyInput() {
+        val core = reader()
+        core.loadText("... !!!")
+        assertEquals(2, core.tokenCount())
+        assertEquals("...", core.currentToken())
+    }
+
+    @Test
     fun whitespaceNormalization() {
         val core = reader()
         core.loadText("  hello   world\r\n\r\nfrom   field  ")
         assertEquals(4, core.tokenCount())
         assertEquals("hello", core.currentToken())
+    }
+
+    @Test
+    fun tabsAndNewlinesCollapse() {
+        val words = K0R34D3RTokenizer.splitIntoWords("one\t\ttwo\nthree")
+        assertEquals(listOf("one", "two", "three"), words)
     }
 
     @Test
@@ -35,6 +57,14 @@ class K0R34D3RReaderTest {
         assertEquals("Signal", core.currentToken())
         core.nextToken()
         assertEquals("lost.", core.currentToken())
+    }
+
+    @Test
+    fun unicodeTextTokenizes() {
+        val core = reader()
+        core.loadText("café naïve résumé")
+        assertEquals(3, core.tokenCount())
+        assertEquals("café", core.currentToken())
     }
 
     @Test
@@ -58,6 +88,15 @@ class K0R34D3RReaderTest {
     }
 
     @Test
+    fun chunkSizeThreeGroupsWords() {
+        val core = reader()
+        core.setChunkSize(3)
+        core.loadText("a b c d e")
+        assertEquals(2, core.tokenCount())
+        assertEquals("a b c", core.currentToken())
+    }
+
+    @Test
     fun nextAndPreviousToken() {
         val core = reader()
         core.loadText("alpha beta gamma")
@@ -66,6 +105,20 @@ class K0R34D3RReaderTest {
         assertEquals("gamma", core.nextToken())
         assertNull(core.nextToken())
         assertEquals("beta", core.previousToken())
+    }
+
+    @Test
+    fun nextPastEndReturnsNull() {
+        val core = reader()
+        core.loadText("only")
+        assertNull(core.nextToken())
+    }
+
+    @Test
+    fun previousBeforeStartReturnsNull() {
+        val core = reader()
+        core.loadText("only")
+        assertNull(core.previousToken())
     }
 
     @Test
@@ -80,12 +133,15 @@ class K0R34D3RReaderTest {
     }
 
     @Test
-    fun progressPercentAdvances() {
+    fun progressPercentAtStartMiddleEnd() {
         val core = reader()
         core.loadText("one two three four")
         assertEquals(0.25f, core.progressPercent())
         core.nextToken()
         assertEquals(0.5f, core.progressPercent())
+        core.nextToken()
+        core.nextToken()
+        assertEquals(1f, core.progressPercent())
     }
 
     @Test
@@ -99,11 +155,34 @@ class K0R34D3RReaderTest {
     }
 
     @Test
+    fun currentTokenBeforeLoadIsEmpty() {
+        val core = reader()
+        assertEquals("", core.currentToken())
+        assertEquals(0, core.tokenCount())
+    }
+
+    @Test
     fun phraseChunkingUsesPunctuationBoundaries() {
         val core = reader()
         core.setChunkSize(4)
         core.loadText("First sentence. Second sentence here.")
         assertTrue(core.tokenCount() >= 2)
         assertTrue(core.currentToken().contains("First") || core.currentToken().contains("sentence"))
+    }
+
+    @Test
+    fun optimalRecognitionPointMatchesDartLogic() {
+        assertEquals(0, K0R34D3RChunker.optimalRecognitionPoint(""))
+        assertEquals(1, K0R34D3RChunker.optimalRecognitionPoint("hello"))
+        assertEquals(2, K0R34D3RChunker.optimalRecognitionPoint("terminal"))
+    }
+
+    @Test
+    fun chunkIndexMappingRoundTrip() {
+        val text = "one two three four five six"
+        val chunks = K0R34D3RChunker.buildTokens(text, 2)
+        val wordIndex = K0R34D3RChunker.wordIndexForChunkIndex(chunks, 2)
+        val chunkIndex = K0R34D3RChunker.chunkIndexForWordIndex(chunks, wordIndex)
+        assertEquals(2, chunkIndex)
     }
 }

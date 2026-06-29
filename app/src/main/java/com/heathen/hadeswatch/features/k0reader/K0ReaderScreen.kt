@@ -61,6 +61,9 @@ fun K0ReaderScreen(
         wpm = prefs.wpm.first()
         chunkSize = prefs.chunkSize.first()
         fontSize = prefs.fontSize.first()
+        ReaderTransferRepository.consumePendingText()?.let { pending ->
+            inputText = pending
+        }
     }
 
     LaunchedEffect(isPlaying, wpm, reducedMotion, adapter) {

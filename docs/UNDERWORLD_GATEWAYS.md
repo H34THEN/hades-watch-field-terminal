@@ -2,41 +2,55 @@
 
 ## Purpose
 
-Underworld Gateways is a **local-first launcher** for user-defined NAS, homelab, and self-hosted service URLs (Jellyfin, Home Assistant, MeTube, slskd, dashboards, etc.).
+Local-first launcher for user-defined NAS, homelab, and self-hosted URLs.
 
-It is themed for Hades Watch Field Terminal but is **not** part of the trusted Hades Watch website WebShell.
+**Not part of the Hades Watch trusted WebShell.**
 
-## MVP Behavior
+## Launch Modes
 
-- Add / edit / delete gateway cards
-- Fields: display name, URL, built-in icon, optional category, optional note
-- Built-in icons: NAS, Media, Music, Downloads, Home Assistant, Terminal, Dashboard, Archive, Custom
-- Local persistence via DataStore (JSON-encoded list)
-- URL validation: must start with `http://` or `https://`
-- HTTP URLs show a confirmation dialog (common for LAN services)
-- Launch opens **externally** via `Intent.ACTION_VIEW` (system browser)
+| Mode | Default | Behavior |
+|------|---------|----------|
+| `EXTERNAL_BROWSER` | **Yes** | `Intent.ACTION_VIEW` — safest for arbitrary URLs |
+| `ISOLATED_IN_APP_VIEWER` | Opt-in | Separate Gateway Viewer WebView |
 
-## Security Model
+## Gateway Viewer Security
 
-| Hades Watch WebShell | Underworld Gateways |
-|---------------------|---------------------|
-| Allowlist: `hadeswatch.com` | User-defined URLs |
-| Shares WebView cookies | **No** Hades Watch cookies |
-| Trusted domain policy | **Not** in `TrustedDomainPolicy` |
-| In-app WebView | External browser launch |
+The Gateway Viewer (`GenericGatewayViewerScreen`) is **not** the Hades Watch WebShell:
 
-Gateway URLs are **intentionally user-controlled**. They must never inherit Hades Watch session state or be mixed into the Hades Watch allowlist without an explicit product/security review.
+- Does **not** use `TrustedDomainPolicy`
+- Separate user agent suffix: `HadesWatchAndroidGatewayViewer/0.1`
+- Labeled UI: "Gateway Viewer" / "Not Hades Watch"
+- HTTP requires confirmation before load
+- Cross-host navigation opens externally
+- No `addJavascriptInterface`, no injected JS
+- No credential/cookie logging
+
+### Cookie Isolation Limitation
+
+Android WebView shares process-level `CookieManager`. The app:
+
+- Does not copy Hades Watch cookies to gateways
+- Does not use Hades WebShell instances for gateways
+- Provides **Clear Gateway Viewer cache** in Settings
+
+Full cookie isolation between WebViews is **not guaranteed** by Android — documented honestly.
+
+## Custom Icons
+
+- Built-in icon set (NAS, Media, Music, etc.)
+- Optional custom image via **system Photo Picker** (no storage permission)
+- URI stored in `customIconUri`; persistence depends on Android URI grants
+
+## Import / Export
+
+- **Export:** Copy JSON to clipboard or share via `ACTION_SEND`
+- **Import:** Paste JSON, preview validation, merge without overwriting existing IDs
+- All imported URLs validated (`http://` or `https://`)
+
+## Data Model
+
+`GatewayDefinition` includes: id, displayName, url, iconKey, customIconUri, category, note, launchMode, timestamps, sortOrder.
 
 ## Permissions
 
-**None** in MVP. Icon selection uses built-in Material icons — no storage or photo picker permissions.
-
-## Data Control
-
-Settings → **Clear Underworld Gateways** or **Clear all local tool data**.
-
-## Future Enhancements (Not in MVP)
-
-- Optional isolated in-app generic viewer (clearly labeled, no cookie sharing)
-- Official API sync of gateway lists (with explicit consent)
-- Custom image icons via system photo picker (no broad storage permission)
+None beyond app-level INTERNET (WebView/ browser launch).

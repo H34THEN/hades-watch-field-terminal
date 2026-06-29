@@ -4,17 +4,25 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 
-/**
- * Launches gateway URLs outside the trusted Hades Watch WebShell.
- * Gateway sessions do not share Hades Watch cookies.
- */
 object GatewayLauncher {
 
-    fun launch(context: Context, url: String) {
+    fun launchExternal(context: Context, url: String) {
         val normalized = GatewayUrlValidator.normalize(url)
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(normalized)).apply {
-            addCategory(Intent.CATEGORY_BROWSABLE)
+        context.startActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse(normalized)).apply {
+                addCategory(Intent.CATEGORY_BROWSABLE)
+            },
+        )
+    }
+
+    fun launch(
+        context: Context,
+        gateway: GatewayDefinition,
+        onOpenInAppViewer: (GatewayDefinition) -> Unit,
+    ) {
+        when (gateway.launchMode) {
+            GatewayLaunchMode.EXTERNAL_BROWSER -> launchExternal(context, gateway.url)
+            GatewayLaunchMode.ISOLATED_IN_APP_VIEWER -> onOpenInAppViewer(gateway)
         }
-        context.startActivity(intent)
     }
 }

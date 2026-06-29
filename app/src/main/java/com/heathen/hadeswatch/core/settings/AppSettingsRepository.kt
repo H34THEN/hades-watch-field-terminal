@@ -20,9 +20,11 @@ class AppSettingsRepository(private val context: Context) {
         val TOOL_ARES = booleanPreferencesKey(SettingsKeys.TOOL_ARES_ENABLED)
         val TOOL_FIELD_NOTES = booleanPreferencesKey(SettingsKeys.TOOL_FIELD_NOTES_ENABLED)
         val TOOL_GATEWAYS = booleanPreferencesKey(SettingsKeys.TOOL_GATEWAYS_ENABLED)
+        val TOOL_SIGNAL_READER = booleanPreferencesKey(SettingsKeys.TOOL_SIGNAL_READER_ENABLED)
         val K0READER_USE_SDK = booleanPreferencesKey(SettingsKeys.K0READER_USE_SDK)
         val FIELD_NOTES_DRAFT = stringPreferencesKey(SettingsKeys.FIELD_NOTES_DRAFT)
         val GATEWAYS_DATA = stringPreferencesKey(SettingsKeys.GATEWAYS_DATA)
+        val SIGNAL_SNIPPETS_DATA = stringPreferencesKey(SettingsKeys.SIGNAL_SNIPPETS_DATA)
         val K0READER_WPM = intPreferencesKey(SettingsKeys.K0READER_WPM)
         val K0READER_CHUNK = intPreferencesKey(SettingsKeys.K0READER_CHUNK_SIZE)
         val K0READER_FONT = intPreferencesKey(SettingsKeys.K0READER_FONT_SIZE)
@@ -38,6 +40,8 @@ class AppSettingsRepository(private val context: Context) {
     val fieldNotesEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[Keys.TOOL_FIELD_NOTES] ?: true }
     val gatewaysEnabled: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.TOOL_GATEWAYS] ?: true }
+    val signalReaderEnabled: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[Keys.TOOL_SIGNAL_READER] ?: true }
     val k0ReaderUseSdkAdapter: Flow<Boolean> =
         context.settingsDataStore.data.map { it[Keys.K0READER_USE_SDK] ?: true }
     val fieldNotesDraft: Flow<String> = context.settingsDataStore.data.map { it[Keys.FIELD_NOTES_DRAFT] ?: "" }
@@ -53,6 +57,7 @@ class AppSettingsRepository(private val context: Context) {
     suspend fun setAresEnabled(value: Boolean) = setBoolean(Keys.TOOL_ARES, value)
     suspend fun setFieldNotesEnabled(value: Boolean) = setBoolean(Keys.TOOL_FIELD_NOTES, value)
     suspend fun setGatewaysEnabled(value: Boolean) = setBoolean(Keys.TOOL_GATEWAYS, value)
+    suspend fun setSignalReaderEnabled(value: Boolean) = setBoolean(Keys.TOOL_SIGNAL_READER, value)
     suspend fun setK0ReaderUseSdkAdapter(value: Boolean) = setBoolean(Keys.K0READER_USE_SDK, value)
     suspend fun setFieldNotesDraft(value: String) = setString(Keys.FIELD_NOTES_DRAFT, value)
     suspend fun setK0ReaderWpm(value: Int) = setInt(Keys.K0READER_WPM, value)
@@ -63,6 +68,7 @@ class AppSettingsRepository(private val context: Context) {
         context.settingsDataStore.edit { prefs ->
             prefs.remove(Keys.FIELD_NOTES_DRAFT)
             prefs.remove(Keys.GATEWAYS_DATA)
+            prefs.remove(Keys.SIGNAL_SNIPPETS_DATA)
             prefs.remove(Keys.K0READER_WPM)
             prefs.remove(Keys.K0READER_CHUNK)
             prefs.remove(Keys.K0READER_FONT)
@@ -72,6 +78,12 @@ class AppSettingsRepository(private val context: Context) {
     suspend fun clearGatewayData() {
         context.settingsDataStore.edit { prefs ->
             prefs.remove(Keys.GATEWAYS_DATA)
+        }
+    }
+
+    suspend fun clearSignalReaderData() {
+        context.settingsDataStore.edit { prefs ->
+            prefs.remove(Keys.SIGNAL_SNIPPETS_DATA)
         }
     }
 

@@ -16,11 +16,16 @@ import com.heathen.hadeswatch.features.fieldnotes.FieldNotesScreen
 import com.heathen.hadeswatch.features.gateways.GatewayEditorScreen
 import com.heathen.hadeswatch.features.gateways.GatewayRepository
 import com.heathen.hadeswatch.features.gateways.UnderworldGatewaysScreen
+import com.heathen.hadeswatch.features.gateways.viewer.GenericGatewayViewerScreen
 import com.heathen.hadeswatch.features.home.HomeScreen
 import com.heathen.hadeswatch.features.k0reader.K0ReaderScreen
 import com.heathen.hadeswatch.features.notifications.NotificationsScreen
 import com.heathen.hadeswatch.features.settings.PrivacySafetyScreen
 import com.heathen.hadeswatch.features.settings.SettingsScreen
+import com.heathen.hadeswatch.features.signalreader.SignalReaderDetailScreen
+import com.heathen.hadeswatch.features.signalreader.SignalReaderScreen
+import com.heathen.hadeswatch.features.signalreader.SignalSnippetEditorScreen
+import com.heathen.hadeswatch.features.signalreader.SignalSnippetRepository
 import com.heathen.hadeswatch.features.tools.ToolsHubScreen
 import com.heathen.hadeswatch.features.webshell.WebShellScreen
 import java.net.URLDecoder
@@ -31,6 +36,7 @@ fun HadesNavGraph(
     settingsRepository: AppSettingsRepository,
     sessionManager: SessionManager,
     gatewayRepository: GatewayRepository,
+    signalSnippetRepository: SignalSnippetRepository,
     startDestination: String = HadesDestination.Home.route,
 ) {
     val reducedMotion by settingsRepository.reducedMotion.collectAsState(initial = false)
@@ -39,9 +45,11 @@ fun HadesNavGraph(
     val openExternal by settingsRepository.openExternalInBrowser.collectAsState(initial = true)
     val k0ReaderEnabled by settingsRepository.k0ReaderEnabled.collectAsState(initial = true)
     val gatewaysEnabled by settingsRepository.gatewaysEnabled.collectAsState(initial = true)
+    val signalReaderEnabled by settingsRepository.signalReaderEnabled.collectAsState(initial = true)
     val aresEnabled by settingsRepository.aresEnabled.collectAsState(initial = true)
     val fieldNotesEnabled by settingsRepository.fieldNotesEnabled.collectAsState(initial = true)
     val k0ReaderUseSdk by settingsRepository.k0ReaderUseSdkAdapter.collectAsState(initial = true)
+    val gateways by gatewayRepository.gateways.collectAsState(initial = emptyList())
 
     NavHost(
         navController = navController,
@@ -67,6 +75,7 @@ fun HadesNavGraph(
                 onNavigate = { navController.navigate(it) },
                 k0ReaderEnabled = k0ReaderEnabled,
                 gatewaysEnabled = gatewaysEnabled,
+                signalReaderEnabled = signalReaderEnabled,
                 aresEnabled = aresEnabled,
                 fieldNotesEnabled = fieldNotesEnabled,
             )
@@ -85,6 +94,7 @@ fun HadesNavGraph(
                 k0ReaderEnabled = k0ReaderEnabled,
                 k0ReaderUseSdk = k0ReaderUseSdk,
                 gatewaysEnabled = gatewaysEnabled,
+                signalReaderEnabled = signalReaderEnabled,
                 aresEnabled = aresEnabled,
                 fieldNotesEnabled = fieldNotesEnabled,
                 onNavigate = { navController.navigate(it) },
@@ -104,7 +114,23 @@ fun HadesNavGraph(
                 gatewayRepository = gatewayRepository,
                 onAddGateway = { navController.navigate(HadesDestination.gatewayEditorRoute()) },
                 onEditGateway = { id -> navController.navigate(HadesDestination.gatewayEditorRoute(id)) },
+                onOpenInAppViewer = { gateway ->
+                    navController.navigate(HadesDestination.gatewayViewerRoute(gateway.id))
+                },
             )
+        }
+        composable(
+            route = HadesDestination.GatewayViewer.route,
+            arguments = listOf(navArgument("gatewayId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val gatewayId = backStackEntry.arguments?.getString("gatewayId")
+            val gateway = gateways.find { it.id == gatewayId }
+            if (gateway != null) {
+                GenericGatewayViewerScreen(
+                    gateway = gateway,
+                    onClose = { navController.popBackStack() },
+                )
+            }
         }
         composable(HadesDestination.GatewayEditorNew.route) {
             GatewayEditorScreen(
@@ -124,6 +150,50 @@ fun HadesNavGraph(
                 gatewayId = gatewayId,
                 onSaved = { navController.popBackStack() },
                 onCancel = { navController.popBackStack() },
+            )
+        }
+        composable(HadesDestination.SignalReader.route) {
+            SignalReaderScreen(
+                repository = signalSnippetRepository,
+                onAddSnippet = { navController.navigate(HadesDestination.signalSnippetEditorRoute()) },
+                onOpenSnippet = { id -> navController.navigate(HadesDestination.signalSnippetDetailRoute(id)) },
+            )
+        }
+        composable(HadesDestination.SignalSnippetEditorNew.route) {
+            SignalSnippetEditorScreen(
+                repository = signalSnippetRepository,
+                snippetId = null,
+                onSaved = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = HadesDestination.SignalSnippetEditor.route,
+            arguments = listOf(navArgument("snippetId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            SignalSnippetEditorScreen(
+                repository = signalSnippetRepository,
+                snippetId = backStackEntry.arguments?.getString("snippetId"),
+                onSaved = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() },
+            )
+        }
+        composable(
+            route = HadesDestination.SignalSnippetDetail.route,
+            arguments = listOf(navArgument("snippetId") { type = NavType.StringType }),
+        ) { backStackEntry ->
+            val snippetId = backStackEntry.arguments?.getString("snippetId") ?: return@composable
+            SignalReaderDetailScreen(
+                repository = signalSnippetRepository,
+                snippetId = snippetId,
+                onEdit = { navController.navigate(HadesDestination.signalSnippetEditorRoute(snippetId)) },
+                onReadInK0Reader = {
+                    navController.navigate(HadesDestination.K0Reader.route) {
+                        popUpTo(HadesDestination.Tools.route) { saveState = true }
+                        launchSingleTop = true
+                    }
+                },
+                onDeleted = { navController.popBackStack() },
             )
         }
         composable(HadesDestination.Ares.route) {
@@ -152,7 +222,9 @@ fun routeForBottomNav(route: String?): String = when {
     route == HadesDestination.Ares.route -> HadesDestination.Tools.route
     route == HadesDestination.FieldNotes.route -> HadesDestination.Tools.route
     route == HadesDestination.UnderworldGateways.route -> HadesDestination.Tools.route
-    route?.startsWith("tools/gateways/edit") == true -> HadesDestination.Tools.route
+    route == HadesDestination.SignalReader.route -> HadesDestination.Tools.route
+    route?.startsWith("tools/gateways/") == true -> HadesDestination.Tools.route
+    route?.startsWith("tools/signalreader/") == true -> HadesDestination.Tools.route
     route == HadesDestination.PrivacySafety.route -> HadesDestination.Settings.route
     else -> route ?: HadesDestination.Home.route
 }

@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.heathen.hadeswatch.core.navigation.HadesDestination
 import com.heathen.hadeswatch.core.navigation.WebRoutes
@@ -24,6 +25,7 @@ import com.heathen.hadeswatch.core.settings.AppSettingsRepository
 import com.heathen.hadeswatch.core.theme.MutedText
 import com.heathen.hadeswatch.core.theme.TerminalGreen
 import com.heathen.hadeswatch.core.ui.HadesTerminalCard
+import com.heathen.hadeswatch.features.gateways.viewer.clearGatewayViewerData
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,11 +39,13 @@ fun SettingsScreen(
     k0ReaderEnabled: Boolean,
     k0ReaderUseSdk: Boolean,
     gatewaysEnabled: Boolean,
+    signalReaderEnabled: Boolean,
     aresEnabled: Boolean,
     fieldNotesEnabled: Boolean,
     onNavigate: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -72,8 +76,14 @@ fun SettingsScreen(
             SettingsAction("Clear k0R34DER preferences") {
                 scope.launch { settingsRepository.clearK0ReaderPreferences() }
             }
+            SettingsAction("Clear Signal Reader snippets") {
+                scope.launch { settingsRepository.clearSignalReaderData() }
+            }
             SettingsAction("Clear Underworld Gateways") {
                 scope.launch { settingsRepository.clearGatewayData() }
+            }
+            SettingsAction("Clear Gateway Viewer cache") {
+                clearGatewayViewerData(context)
             }
         }
 
@@ -99,6 +109,9 @@ fun SettingsScreen(
             SettingsToggle("Use K0R34D3R Kotlin core", k0ReaderUseSdk) {
                 scope.launch { settingsRepository.setK0ReaderUseSdkAdapter(it) }
             }
+            SettingsToggle("Enable Signal Reader", signalReaderEnabled) {
+                scope.launch { settingsRepository.setSignalReaderEnabled(it) }
+            }
             SettingsToggle("Enable Underworld Gateways", gatewaysEnabled) {
                 scope.launch { settingsRepository.setGatewaysEnabled(it) }
             }
@@ -112,15 +125,13 @@ fun SettingsScreen(
 
         HadesTerminalCard(title = "Native Tool Notes") {
             Text(
-                text = "k0R34DER processes pasted text locally via the :k0r34d3r-core module. " +
-                    "Turn off Kotlin core to use the legacy local fallback engine.",
+                text = "k0R34DER and Signal Reader process text locally. No upload. Signal Reader does not scrape Hades Watch.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MutedText,
                 modifier = Modifier.padding(vertical = 4.dp),
             )
             Text(
-                text = "Underworld Gateways stores user-defined URLs locally. Gateway launches open " +
-                    "externally and do not share Hades Watch WebView cookies.",
+                text = "Underworld Gateways external browser is the safest default. Optional in-app Gateway Viewer is isolated from Hades Watch WebShell.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MutedText,
                 modifier = Modifier.padding(vertical = 4.dp),

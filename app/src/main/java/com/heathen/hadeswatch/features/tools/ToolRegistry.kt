@@ -20,6 +20,19 @@ object ToolRegistry {
             settingsToggleKey = SettingsKeys.TOOL_K0READER_ENABLED,
         ),
         ToolDefinition(
+            id = "signal_reader",
+            name = "Signal Reader",
+            description = "Local library for manually saved lore snippets and transmissions.",
+            status = ToolStatus.Available,
+            classification = ToolClassification.LOCAL_ONLY,
+            category = ToolCategory.READING,
+            iconKey = "signal_reader",
+            permissionsNeeded = "None",
+            safetyNote = "Local-only snippets. Does not scrape websites or upload text.",
+            route = HadesDestination.SignalReader.route,
+            settingsToggleKey = SettingsKeys.TOOL_SIGNAL_READER_ENABLED,
+        ),
+        ToolDefinition(
             id = "gateways",
             name = "Underworld Gateways",
             description = "Save and launch trusted local NAS, homelab, and self-hosted URLs.",
@@ -28,22 +41,9 @@ object ToolRegistry {
             category = ToolCategory.LAUNCHER,
             iconKey = "gateways",
             permissionsNeeded = "None in MVP",
-            safetyNote = "Opens user-saved URLs externally. Not part of Hades Watch trusted WebView.",
+            safetyNote = "User URLs — external browser default; optional isolated viewer.",
             route = HadesDestination.UnderworldGateways.route,
             settingsToggleKey = SettingsKeys.TOOL_GATEWAYS_ENABLED,
-        ),
-        ToolDefinition(
-            id = "ares",
-            name = "4R3S",
-            description = "Passive signal-awareness module (coming soon).",
-            status = ToolStatus.ComingSoon,
-            classification = ToolClassification.PERMISSION_GATED,
-            category = ToolCategory.OBSERVER,
-            iconKey = "ares",
-            permissionsNeeded = "None in MVP",
-            safetyNote = "No scanning, no background services in MVP.",
-            route = HadesDestination.Ares.route,
-            settingsToggleKey = SettingsKeys.TOOL_ARES_ENABLED,
         ),
         ToolDefinition(
             id = "fieldnotes",
@@ -71,15 +71,17 @@ object ToolRegistry {
             webUrl = WebRoutes.DEAD_DROPS,
         ),
         ToolDefinition(
-            id = "signal_reader",
-            name = "Signal Reader",
-            description = "Placeholder for future signal digest tools.",
+            id = "ares",
+            name = "4R3S",
+            description = "Passive signal-awareness module (coming soon).",
             status = ToolStatus.ComingSoon,
-            classification = ToolClassification.FUTURE_API,
-            category = ToolCategory.FUTURE,
-            iconKey = "signal_reader",
-            permissionsNeeded = "None",
-            safetyNote = "Not implemented in MVP.",
+            classification = ToolClassification.PERMISSION_GATED,
+            category = ToolCategory.OBSERVER,
+            iconKey = "ares",
+            permissionsNeeded = "None in MVP",
+            safetyNote = "No scanning, no background services in MVP.",
+            route = HadesDestination.Ares.route,
+            settingsToggleKey = SettingsKeys.TOOL_ARES_ENABLED,
         ),
         ToolDefinition(
             id = "accessibility",
@@ -98,15 +100,39 @@ object ToolRegistry {
     fun visibleTools(
         k0ReaderEnabled: Boolean,
         gatewaysEnabled: Boolean,
+        signalReaderEnabled: Boolean,
         aresEnabled: Boolean,
         fieldNotesEnabled: Boolean,
     ): List<ToolDefinition> = tools.filter { tool ->
         when (tool.id) {
             "k0reader" -> k0ReaderEnabled
             "gateways" -> gatewaysEnabled
+            "signal_reader" -> signalReaderEnabled
             "ares" -> aresEnabled
             "fieldnotes" -> fieldNotesEnabled
             else -> true
         }
+    }
+
+    fun groupedVisibleTools(
+        k0ReaderEnabled: Boolean,
+        gatewaysEnabled: Boolean,
+        signalReaderEnabled: Boolean,
+        aresEnabled: Boolean,
+        fieldNotesEnabled: Boolean,
+    ): List<Pair<String, List<ToolDefinition>>> {
+        val visible = visibleTools(k0ReaderEnabled, gatewaysEnabled, signalReaderEnabled, aresEnabled, fieldNotesEnabled)
+        return listOf(
+            "Local Tools" to visible.filter {
+                it.classification == ToolClassification.LOCAL_ONLY && it.status == ToolStatus.Available
+            },
+            "Web Shortcuts" to visible.filter { it.classification == ToolClassification.WEB_SHORTCUT },
+            "Coming Soon" to visible.filter {
+                it.status == ToolStatus.ComingSoon || it.classification == ToolClassification.PERMISSION_GATED
+            },
+            "System" to visible.filter {
+                it.status == ToolStatus.SettingsShortcut || it.category == ToolCategory.SYSTEM
+            },
+        ).filter { it.second.isNotEmpty() }
     }
 }

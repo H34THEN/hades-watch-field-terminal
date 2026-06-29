@@ -36,42 +36,42 @@ fun PrivacySafetyScreen() {
                 "Sessions are preserved through normal Android WebView cookies. The app does not store passwords.",
         )
         privacySection(
-            "WebView Companion",
-            "The website remains the source of truth. The app does not scrape HTML, duplicate the database, " +
-                "or bypass website auth. Only hadeswatch.com and www.hadeswatch.com load in the trusted WebShell.",
+            "Hades Watch WebShell",
+            "Only hadeswatch.com and www.hadeswatch.com load in the trusted WebShell. " +
+                "The website remains the source of truth.",
         )
         privacySection(
             "k0R34DER",
-            "k0R34DER processes pasted text locally using the :k0r34d3r-core Kotlin module. " +
-                "No network upload. A legacy local fallback engine remains available in Settings.",
+            "k0R34DER processes pasted text locally using :k0r34d3r-core. No network upload. " +
+                "A legacy local fallback engine remains available in Settings.",
+        )
+        privacySection(
+            "Signal Reader",
+            "Signal Reader stores snippets you manually save. It does not scrape Hades Watch or upload text. " +
+                "You can send snippet text to k0R34DER locally for RSVP reading.",
         )
         privacySection(
             "Underworld Gateways",
-            "Underworld Gateways stores user-defined NAS/homelab URLs on your device. " +
-                "Gateway URLs are not added to the Hades Watch trusted WebView allowlist. " +
-                "Launches open externally (or in your browser) and do not inherit Hades Watch session cookies.",
+            "Gateway URLs are user-defined and not Hades Watch trusted domains. External browser is the safest default. " +
+                "Optional Gateway Viewer is isolated and labeled separately. Gateway URLs do not intentionally receive " +
+                "Hades Watch session cookies, though Android WebView cookie isolation has process-level limits.",
         )
         privacySection(
             "Field Notes",
-            "Field Notes drafts stay on your device until you copy them manually. No sync in MVP.",
+            "Field Notes drafts stay on your device until you copy them manually.",
         )
         privacySection(
             "4R3S Module",
             "4R3S will require explicit permissions only when implemented. MVP does not scan or run background tracking.",
         )
         privacySection(
-            "External Links",
-            "Links outside hadeswatch.com open in your system browser when enabled in Settings.",
-        )
-        privacySection(
             "Data Control",
-            "You can clear website session, WebView cache, local tool data, k0R34DER preferences, " +
-                "and Underworld Gateways from Settings. Clearing local tool data does not clear website cookies " +
-                "unless you use Clear website session.",
+            "Clear website session, WebView cache, local tool data, Signal Reader snippets, gateways, " +
+                "k0R34DER preferences, and Gateway Viewer cache separately from Settings.",
         )
         privacySection(
-            "No Background Tracking",
-            "This app does not run background location, Bluetooth, Wi-Fi scanning, or upload native tool data without consent.",
+            "Permissions",
+            "MVP uses INTERNET and ACCESS_NETWORK_STATE only. No location, Bluetooth, camera, mic, or storage permissions.",
         )
     }
 }
