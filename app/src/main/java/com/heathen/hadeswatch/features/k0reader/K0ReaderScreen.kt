@@ -179,15 +179,17 @@ fun K0ReaderScreen(
         }
     }
 
-    DisposableEffect(isPlaying) {
-        view.keepScreenOn = isPlaying
+    DisposableEffect(Unit) {
         onDispose {
             view.keepScreenOn = false
-            isPlaying = false
         }
     }
 
-    LaunchedEffect(isPlaying, wpm, reducedMotion, punctuationPause, adapter, displayToken) {
+    LaunchedEffect(isPlaying) {
+        view.keepScreenOn = isPlaying
+    }
+
+    LaunchedEffect(isPlaying, wpm, reducedMotion, punctuationPause) {
         if (!isPlaying || reducedMotion) return@LaunchedEffect
         while (isActive && isPlaying) {
             val pauseMs = computePauseMillis(adapter.intervalMillis(), displayToken, punctuationPause)
@@ -370,10 +372,12 @@ fun K0ReaderScreen(
                 text = if (isPlaying) "Pause" else "Start",
                 onClick = {
                     if (!isLoaded && inputText.isNotBlank()) loadTextIntoReader()
-                    if (adapter.hasText()) isPlaying = !isPlaying
+                    if (adapter.hasText()) {
+                        isPlaying = !isPlaying
+                    }
                 },
                 modifier = Modifier.weight(1f),
-                enabled = inputText.isNotBlank() || isLoaded,
+                enabled = adapter.hasText() || inputText.isNotBlank(),
             )
             HadesSecondaryButton(
                 text = "Rewind",
