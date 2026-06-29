@@ -2,14 +2,19 @@
 
 Use this checklist after builds or milestone changes.
 
-## Navigation (5-tab model)
+## Navigation (HUD 4-tab dock)
 
-- [ ] Bottom nav shows: Home, Web, Tools, Reader, Settings — each with icon + label
-- [ ] Selected tab is visually obvious
-- [ ] No label overlap on small phone width
-- [ ] Web tab opens route selector + WebShell
+- [ ] Bottom dock shows: Web, Tools, Reader, Settings — each with icon + label
+- [ ] Selected tab is visually obvious after tool sub-navigation
+- [ ] Web tab is default start (dashboard URL)
+- [ ] Web HUD chip collapsed by default — login page has maximum vertical space
+- [ ] Expand web controls → back, forward, reload, routes, open externally
+- [ ] Route selector lists Dashboard, MMO, Dead Drops, Forums, Profile, Notifications, Login
+- [ ] FAB on Web tab opens Field Terminal tools drawer
+- [ ] Tools drawer quick actions navigate (k0R34DER, Signal Reader, Gateways, etc.)
 - [ ] Reader tab opens k0R34DER directly
-- [ ] Tool sub-screens highlight Tools tab in bottom nav
+- [ ] Tool sub-screens highlight Tools tab in dock
+- [ ] No dead dock buttons
 
 ## Hades Watch WebShell
 
@@ -29,7 +34,10 @@ Use this checklist after builds or milestone changes.
 - [ ] Focus mode hides input while playing
 - [ ] Signal Reader handoff loads text with source label
 - [ ] Clear transfer / clear text works
-- [ ] Optional save last text locally (Settings toggles in reader)
+- [ ] Import EPUB — system picker, parse progress, title + token count
+- [ ] EPUB RSVP playback works
+- [ ] Clear imported book works
+- [ ] Bad/corrupt EPUB shows friendly error (no crash)
 
 ## Signal Reader
 

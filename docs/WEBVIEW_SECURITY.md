@@ -50,6 +50,15 @@ Do not log:
 - Passwords or auth headers
 - URLs with sensitive query strings
 
+## Positioning
+
+Hades Watch Field Terminal is **not a general browser**. It is a sandboxed mobile HUD shell for the Hades Watch website with local-first Field Terminal tools as overlays.
+
+- No arbitrary URL entry in the trusted WebShell
+- No JavaScript bridges or page scraping
+- No website credential storage
+- EPUB imports processed locally only
+
 ## Back Navigation
 
 WebView back stack integrated with Android back gesture via `BackHandler`.

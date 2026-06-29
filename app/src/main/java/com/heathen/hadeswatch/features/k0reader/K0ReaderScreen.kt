@@ -1,6 +1,9 @@
 package com.heathen.hadeswatch.features.k0reader
 
 import androidx.compose.animation.AnimatedVisibility
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -11,13 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -36,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,9 +49,12 @@ import com.heathen.hadeswatch.core.ui.HadesPrimaryButton
 import com.heathen.hadeswatch.core.ui.HadesSecondaryButton
 import com.heathen.hadeswatch.core.ui.HadesSectionHeader
 import com.heathen.hadeswatch.core.ui.HadesTerminalCard
-import kotlinx.coroutines.delay
+import com.heathen.hadeswatch.core.ui.HadesWarningBox
+import com.heathen.hadeswatch.features.k0reader.epub.EpubDocumentLoader
+import com.heathen.k0r34d3r.core.epub.EpubImportException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -63,6 +65,7 @@ fun K0ReaderScreen(
 ) {
     val scope = rememberCoroutineScope()
     val view = LocalView.current
+    val context = LocalContext.current
     val prefs = remember { K0ReaderPreferences(settingsRepository) }
     val useSdk by settingsRepository.k0ReaderUseSdkAdapter.collectAsState(initial = true)
     val adapter = rememberDefaultK0ReaderAdapter(useSdk = useSdk)
@@ -81,6 +84,58 @@ fun K0ReaderScreen(
     var orpEnabled by remember { mutableStateOf(true) }
     var saveSession by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(true) }
+    var epubTitle by remember { mutableStateOf<String?>(null) }
+    var isParsingEpub by remember { mutableStateOf(false) }
+    var epubError by remember { mutableStateOf<String?>(null) }
+
+    fun syncDisplayFromAdapter() {
+        displayToken = adapter.currentToken()
+        progress = adapter.progressPercent()
+        isLoaded = adapter.hasText()
+    }
+
+    fun loadTextIntoReader() {
+        adapter.loadText(inputText)
+        adapter.setWordsPerMinute(wpm)
+        adapter.setChunkSize(chunkSize)
+        adapter.reset()
+        syncDisplayFromAdapter()
+        isPlaying = false
+        if (saveSession && inputText.isNotBlank()) {
+            scope.launch { prefs.saveLastText(inputText) }
+        }
+    }
+
+    val epubPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            isParsingEpub = true
+            epubError = null
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            } catch (_: SecurityException) {
+                // ephemeral read is fine for one session
+            }
+            try {
+                val result = EpubDocumentLoader.loadFromUri(context, uri)
+                inputText = result.plainText
+                epubTitle = result.title
+                transferSource = null
+                loadTextIntoReader()
+            } catch (e: EpubImportException) {
+                epubError = e.message
+            } catch (e: Exception) {
+                epubError = "Unable to import EPUB."
+            } finally {
+                isParsingEpub = false
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         wpm = prefs.wpm.first()
@@ -124,24 +179,6 @@ fun K0ReaderScreen(
         }
     }
 
-    fun syncDisplayFromAdapter() {
-        displayToken = adapter.currentToken()
-        progress = adapter.progressPercent()
-        isLoaded = adapter.hasText()
-    }
-
-    fun loadTextIntoReader() {
-        adapter.loadText(inputText)
-        adapter.setWordsPerMinute(wpm)
-        adapter.setChunkSize(chunkSize)
-        adapter.reset()
-        syncDisplayFromAdapter()
-        isPlaying = false
-        if (saveSession && inputText.isNotBlank()) {
-            scope.launch { prefs.saveLastText(inputText) }
-        }
-    }
-
     val currentIndex = adapter.currentIndex()
     val prevToken = if (currentIndex > 0) adapter.tokenAt(currentIndex - 1).orEmpty() else ""
     val nextPreview = adapter.tokenAt(currentIndex + 1).orEmpty()
@@ -172,6 +209,7 @@ fun K0ReaderScreen(
                     onClick = {
                         inputText = ""
                         transferSource = null
+                        epubTitle = null
                         ReaderTransferRepository.clearPending()
                         adapter.loadText("")
                         displayToken = ""
@@ -180,6 +218,71 @@ fun K0ReaderScreen(
                         isLoaded = false
                     },
                     modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        }
+
+        epubTitle?.let { title ->
+            HadesTerminalCard(title = "Imported EPUB") {
+                Text(title, color = SignalCyan)
+                Text(
+                    "${adapter.tokenCount()} tokens — local only, not uploaded.",
+                    color = MutedText,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                HadesSecondaryButton(
+                    text = "Clear imported book",
+                    onClick = {
+                        inputText = ""
+                        epubTitle = null
+                        adapter.loadText("")
+                        displayToken = ""
+                        progress = 0f
+                        isPlaying = false
+                        isLoaded = false
+                    },
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
+        }
+
+        if (isParsingEpub) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircularProgressIndicator(modifier = Modifier.padding(end = 12.dp))
+                Text("Parsing EPUB…", color = MutedText)
+            }
+        }
+
+        epubError?.let { message ->
+            HadesWarningBox(message = message)
+        }
+
+        AnimatedVisibility(visible = !focusMode || !isPlaying) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                HadesSecondaryButton(
+                    text = "Import EPUB",
+                    onClick = {
+                        epubPicker.launch(
+                            arrayOf(
+                                "application/epub+zip",
+                                "application/octet-stream",
+                            ),
+                        )
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isParsingEpub,
+                )
+                HadesSecondaryButton(
+                    text = if (showSettings) "Hide settings" else "Settings",
+                    onClick = { showSettings = !showSettings },
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -325,6 +428,7 @@ fun K0ReaderScreen(
                     HadesPrimaryButton(text = "Load text", onClick = { loadTextIntoReader() })
                     HadesSecondaryButton(text = "Clear", onClick = {
                         inputText = ""
+                        epubTitle = null
                         adapter.loadText("")
                         displayToken = ""
                         progress = 0f
@@ -396,7 +500,7 @@ fun K0ReaderScreen(
         if (inputText.isBlank() && !isLoaded) {
             HadesEmptyState(
                 title = "No reading text",
-                message = "Paste lore, forum copy, or open a snippet from Signal Reader.",
+                message = "Paste lore, import an EPUB, or open a snippet from Signal Reader.",
             )
         }
     }

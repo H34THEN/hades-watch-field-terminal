@@ -26,7 +26,7 @@ K0R34D3R/
 | `lib/services/text_processing_service.dart` | **Ported** — whitespace, word split, chunking, ORP, timing |
 | `lib/models/app_settings.dart` | Partially referenced — WPM bounds, chunk modes |
 | `lib/screens/rsvp_screen.dart` | UI inspiration only — not ported |
-| `lib/services/*_import_service.dart` | **Not ported** — network/import features |
+| `lib/services/epub_service.dart` | **Ported (MVP)** — local EPUB text extract only |
 | `lib/services/storage_service.dart` | **Not ported** — Hive storage (app uses DataStore) |
 
 ## Relevant Dart Logic Found
@@ -61,7 +61,7 @@ From `AppSettings`:
 ## What Was Intentionally Not Ported
 
 - Flutter UI (themes, reticles, backgrounds, fonts)
-- Document import (PDF, EPUB, Reddit, article extraction)
+- Document import (PDF, Reddit, article extraction) — **EPUB text import ported**
 - Hive/local document library
 - Network HTTP fetching
 - Full `AppSettings` theme/visual configuration
@@ -78,8 +78,10 @@ From `AppSettings`:
     K0R34D3RChunker.kt
     K0R34D3RReaderConfig.kt
     K0R34D3RReadingState.kt
+    epub/EpubTextExtractor.kt          # Local EPUB → plain text (MVP)
 
 app/features/k0reader/
+  epub/EpubDocumentLoader.kt          # ContentResolver → bytes → core extractor
   K0ReaderAdapter.kt                # App-facing interface
   K0SdkReaderAdapter.kt             # Wraps :k0r34d3r-core (default)
   LocalK0ReaderAdapter.kt           # Legacy fallback
@@ -104,6 +106,7 @@ app/features/k0reader/
 ## Safety / Privacy
 
 - Core module has **no network**, **no storage**, **no Android APIs**
-- k0R34DER UI accepts pasted text only — no website scraping
+- k0R34DER UI accepts pasted text and local EPUB import — no website scraping
+- EPUB bytes and extracted text are not uploaded
 - No upload of reader text
 - User can disable Kotlin core and use `LocalK0ReaderAdapter` fallback in Settings

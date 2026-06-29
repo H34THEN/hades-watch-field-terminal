@@ -39,7 +39,7 @@ fun HadesNavGraph(
     sessionManager: SessionManager,
     gatewayRepository: GatewayRepository,
     signalSnippetRepository: SignalSnippetRepository,
-    startDestination: String = HadesDestination.Home.route,
+    startDestination: String = HadesDestination.webHubRoute(),
 ) {
     val reducedMotion by settingsRepository.reducedMotion.collectAsState(initial = false)
     val highContrast by settingsRepository.highContrast.collectAsState(initial = false)

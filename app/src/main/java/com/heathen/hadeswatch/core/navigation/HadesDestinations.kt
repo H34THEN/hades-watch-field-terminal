@@ -44,7 +44,7 @@ sealed class HadesDestination(
     data object FutureApiStatus : HadesDestination("settings/future-api", "Future API Status")
 
     companion object {
-        val bottomNavItems = listOf(Home, WebHub, Tools, Reader, Settings)
+        val hudDockItems = listOf(WebHub, Tools, Reader, Settings)
 
         fun webHubRoute(url: String = WebRoutes.DASHBOARD): String =
             "web?url=${java.net.URLEncoder.encode(url, Charsets.UTF_8.name())}"
@@ -111,4 +111,5 @@ val primaryWebRoutes = listOf(
     WebRouteOption("Forums", WebRoutes.FORUMS, com.heathen.hadeswatch.core.ui.ToolIconKey.FORUMS),
     WebRouteOption("Profile", WebRoutes.PROFILE_DOSSIER, com.heathen.hadeswatch.core.ui.ToolIconKey.PROFILE),
     WebRouteOption("Notifications", WebRoutes.NOTIFICATIONS, com.heathen.hadeswatch.core.ui.ToolIconKey.NOTIFICATIONS),
+    WebRouteOption("Login", WebRoutes.LOGIN, com.heathen.hadeswatch.core.ui.ToolIconKey.WEB),
 )

@@ -8,11 +8,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
+import com.heathen.hadeswatch.core.hud.HadesHudScaffold
+import com.heathen.hadeswatch.core.hud.tabRouteFromNavRoute
 import com.heathen.hadeswatch.core.navigation.HadesDestination
 import com.heathen.hadeswatch.core.navigation.HadesNavGraph
 import com.heathen.hadeswatch.core.navigation.routeForBottomNav
 import com.heathen.hadeswatch.core.theme.HadesWatchTheme
-import com.heathen.hadeswatch.core.ui.HadesScaffold
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +27,11 @@ class MainActivity : ComponentActivity() {
             val reducedMotion by app.settingsRepository.reducedMotion.collectAsState(initial = false)
             val highContrast by app.settingsRepository.highContrast.collectAsState(initial = false)
             val largeText by app.settingsRepository.largeText.collectAsState(initial = false)
+            val k0ReaderEnabled by app.settingsRepository.k0ReaderEnabled.collectAsState(initial = true)
+            val gatewaysEnabled by app.settingsRepository.gatewaysEnabled.collectAsState(initial = true)
+            val signalReaderEnabled by app.settingsRepository.signalReaderEnabled.collectAsState(initial = true)
+            val aresEnabled by app.settingsRepository.aresEnabled.collectAsState(initial = true)
+            val fieldNotesEnabled by app.settingsRepository.fieldNotesEnabled.collectAsState(initial = true)
 
             HadesWatchTheme(highContrast = highContrast, largeText = largeText) {
                 val navController = rememberNavController()
@@ -40,16 +46,21 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                HadesScaffold(
-                    currentRoute = routeForBottomNav(currentRoute),
+                HadesHudScaffold(
+                    navController = navController,
+                    currentRoute = currentRoute,
+                    currentTabRoute = routeForBottomNav(currentRoute),
+                    dockItems = HadesDestination.hudDockItems,
+                    k0ReaderEnabled = k0ReaderEnabled,
+                    gatewaysEnabled = gatewaysEnabled,
+                    signalReaderEnabled = signalReaderEnabled,
+                    fieldNotesEnabled = fieldNotesEnabled,
+                    aresEnabled = aresEnabled,
                     onNavigate = { route ->
                         navController.navigate(route) {
-                            popUpTo(HadesDestination.Home.route) { saveState = true }
                             launchSingleTop = true
-                            restoreState = true
                         }
                     },
-                    bottomNavItems = HadesDestination.bottomNavItems,
                 ) {
                     HadesNavGraph(
                         navController = navController,
@@ -57,6 +68,7 @@ class MainActivity : ComponentActivity() {
                         sessionManager = app.sessionManager,
                         gatewayRepository = app.gatewayRepository,
                         signalSnippetRepository = app.signalSnippetRepository,
+                        startDestination = HadesDestination.webHubRoute(),
                     )
                 }
             }

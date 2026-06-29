@@ -7,6 +7,10 @@
 3. **Local-first native tools** — optional modules process data on-device unless explicit future APIs exist.
 4. **Minimal permissions in MVP** — only network access required for the WebView companion.
 
+## Positioning
+
+Hades Watch Field Terminal is **not a general browser**. It is a safer sandboxed companion for hadeswatch.com with compact HUD web controls and local-first native tools. Gateway URLs are separate user-defined launchers and are not part of the Hades Watch trusted shell.
+
 ## What the App Does
 
 - Loads allowlisted Hades Watch URLs in a hardened WebView
@@ -27,8 +31,9 @@
 
 ### k0R34DER
 
-- Paste-in text only
+- Paste-in text or **Import EPUB** via system document picker (no storage permission)
 - Local RSVP processing via `:k0r34d3r-core` Kotlin module (default)
+- EPUB text extracted on device only — never uploaded
 - Legacy `LocalK0ReaderAdapter` fallback available in Settings
 - Preferences saved on device
 - No network upload

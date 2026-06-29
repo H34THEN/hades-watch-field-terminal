@@ -17,6 +17,16 @@ Also referenced: `lib/models/app_settings.dart` (WPM bounds, chunk modes)
 | `chunkIndexForWordIndex` | `K0R34D3RChunker.chunkIndexForWordIndex` |
 | `optimalRecognitionPoint` | `K0R34D3RChunker.optimalRecognitionPoint` |
 | Reader stepping / WPM | `K0R34D3RReader` |
+| EPUB HTML strip | `EpubTextExtractor.htmlToPlainText` |
+| EPUB spine extract | `EpubTextExtractor.extract` |
+
+### EPUB tests (`EpubTextExtractorTest`)
+
+- HTML tag stripping
+- Minimal valid EPUB fixture
+- Empty spine throws `EpubImportException`
+
+Run: `./gradlew :k0r34d3r-core:test`
 
 ## Test Coverage
 
@@ -77,6 +87,8 @@ Flutter tooling is **not** required for Kotlin CI. To compare manually later:
 | WPM max | 1200 | 1200 (config) |
 | UI timing | Flutter animation | Compose `delay(intervalMillis)` |
 | Sentence/paragraph split | Implemented in Dart | Not ported (not needed for RSVP MVP) |
+| EPUB import | `epubx` full book model | Minimal ZIP/OPF text extractor (no DRM, no images) |
+| Document library | Hive persistence | Not ported — optional session text in DataStore |
 
 ## Full Parity Remaining
 
@@ -84,3 +96,5 @@ Flutter tooling is **not** required for Kotlin CI. To compare manually later:
 - `estimatedSecondsRemaining` / `formatDuration` exposed on app adapter
 - Explicit `ChunkSizeMode` enum in Kotlin core (optional)
 - Property-based tests for random text inputs
+- EPUB chapter navigation UI (spine merged to plain text today)
+- Flutter visual themes, reticles, backgrounds

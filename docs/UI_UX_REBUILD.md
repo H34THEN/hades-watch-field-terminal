@@ -1,67 +1,54 @@
 # UI/UX Rebuild
 
-Milestone: simplify navigation, unify design system, upgrade k0R34DER reading experience.
+Milestone history: 5-tab nav → **HUD shell** with 4-tab dock, compact web controls, EPUB import.
 
-## Navigation Model
+## Navigation Model (current)
 
-Bottom navigation reduced from **8 tabs to 5**:
+Bottom dock reduced to **4 primary tabs**:
 
 | Tab | Route | Purpose |
 |-----|-------|---------|
-| Home | `home` | Dashboard, quick actions, local tools |
-| Web | `web?url={url}` | Hades Watch WebShell with route selector |
-| Tools | `tools` | Native/local tools grouped by type |
+| Web | `web?url={url}` | Full-screen Hades Watch WebShell (default start) |
+| Tools | `tools` | Native/local tools hub |
 | Reader | `reader` | k0R34DER speed reader (top-level) |
 | Settings | `settings` | App settings, privacy, local data |
 
-Legacy routes (`mmo`, `forums`, etc.) remain as deep links → Web tab with appropriate URL.
+`home` remains for deep links but is not on the dock.
 
-Tool sub-routes (`tools/gateways`, `tools/signalreader`, …) map back to **Tools** tab in bottom nav.
+HUD components in `core/hud/`:
+
+- `HadesHudScaffold` — dock + content inset + tools FAB on Web
+- `HudBottomDock` — 4-tab navigation with save/restore state
+- `HudWebControls` — collapsible web chrome (replaces bulky browser banner)
+- `HudToolDrawerSheet` — Field Terminal tools overlay
+- `HudRouteSelectorSheet` — allowlisted Hades Watch routes
+
+See [HUD_SHELL_NAVIGATION.md](HUD_SHELL_NAVIGATION.md).
 
 ## Design System
 
 Reusable components in `core/ui/`:
 
-- `HadesBottomNav` — consistent 5-tab bar with labels
-- `HadesActionCard` — primary dashboard actions with icons
-- `HadesToolCard` — tool list entries (icon, title, status chips, safety expand)
-- `HadesSectionHeader` — section titles
-- `HadesSearchBar` — consistent search field
-- `HadesEmptyState` — empty lists with next-step guidance
-- `HadesWarningBox` — HTTP / isolation / coming-soon warnings
-- `HadesStatusChip` — readable status badges
-- `HadesIcon` / `ToolIconKey` — centralized icon mapping
+- `HadesBottomNav` — legacy 5-tab bar (retained; superseded by `HudBottomDock`)
+- `HadesActionCard`, `HadesToolCard`, `HadesSectionHeader`, `HadesSearchBar`
+- `HadesEmptyState`, `HadesWarningBox`, `HadesStatusChip`, `HadesIcon`
 
-## k0R34DER UX Upgrades
+## k0R34DER UX
 
-- Dedicated **Reader** bottom nav tab
+- Dedicated **Reader** dock tab
+- **Import EPUB** via system picker — see [EPUB_IMPORT.md](EPUB_IMPORT.md)
 - Large ORP-style token display with optional focus highlight
 - Context preview (previous/next tokens dimmed)
-- Start/Pause auto-advance with WPM-based timing
-- Punctuation-aware pause weighting (optional)
-- Speed up/down buttons (+/- 25 WPM)
-- Chunk mode chips: 1 / 2 / 3 words / Phrase
-- Focus mode hides input while playing
-- Optional local session text save (DataStore, clearable)
-- Keep screen on while playing (no extra permission)
-- Pause on leave screen
+- Start/Pause, punctuation pause, chunk modes, focus mode
 - Signal Reader handoff → Reader tab
 
 ## Known UI Limitations
 
 - Web back/forward depends on WebView history within selected route
 - ORP highlight is Kotlin-core approximation, not full Flutter UI parity
-- No landscape-specific layouts yet (scroll-based fallback)
-- Tag filter chips for Signal Reader not implemented (search only)
+- No landscape-specific layouts yet
+- EPUB: merged plain text only (no per-chapter UI)
 
 ## Manual Test Notes
 
-See [MANUAL_TESTING.md](MANUAL_TESTING.md) — verify 5-tab nav, Reader playback, Web route chips, Tools grouping.
-
-## Future UI Ideas
-
-- Resume reading banner on Home from saved session
-- Custom Tabs option for gateways
-- Tag filter chips in Signal Reader
-- Landscape reader layout with side controls
-- Compose previews in CI for key screens
+See [MANUAL_TESTING.md](MANUAL_TESTING.md) — verify HUD dock, compact web controls, tools drawer, EPUB import.
