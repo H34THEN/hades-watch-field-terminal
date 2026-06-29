@@ -1,0 +1,74 @@
+# Privacy and Safety
+
+## Principles
+
+1. **Website is source of truth** — accounts, gameplay, and community data live on hadeswatch.com.
+2. **WebView-first for gameplay** — native code does not replace site auth or permissions.
+3. **Local-first native tools** — optional modules process data on-device unless explicit future APIs exist.
+4. **Minimal permissions in MVP** — only network access required for the WebView companion.
+
+## What the App Does
+
+- Loads allowlisted Hades Watch URLs in a hardened WebView
+- Preserves login sessions via standard WebView cookies
+- Stores UI preferences and local tool drafts in DataStore
+- Opens non-allowlisted links in the system browser (configurable)
+
+## What the App Does Not Do (MVP)
+
+- Store passwords or raw credentials
+- Scrape or duplicate website HTML/data
+- Bypass website auth or role checks
+- Run background location, Bluetooth, or Wi-Fi scanning
+- Upload k0R34DER pasted text or Field Notes without future explicit consent + API
+- Expose admin shortcuts (no safe role API yet)
+
+## Native Tools
+
+### k0R34DER
+
+- Paste-in text only
+- Local RSVP processing
+- Preferences saved on device
+- No network upload in MVP
+
+### Field Notes
+
+- Local draft textarea
+- Manual copy to website
+- Future sync only via official API with opt-in
+
+### 4R3S
+
+- Placeholder only in MVP
+- No permissions requested
+- No scanning or background services
+
+## User Controls (Settings)
+
+- Clear website session (cookies)
+- Clear WebView cache
+- Clear local tool data
+- Reduced motion / high contrast / large text
+- Tool enable/disable toggles
+
+## K0R34D3R SDK (Future)
+
+Integration planned through `K0ReaderAdapter` — see [K0R34D3R_INTEGRATION_PLAN.md](K0R34D3R_INTEGRATION_PLAN.md).
+
+## Permissions
+
+**MVP declared:**
+
+- `INTERNET`
+- `ACCESS_NETWORK_STATE`
+
+**Not requested in MVP:**
+
+- Location, Bluetooth, Nearby devices, Camera, Microphone, Storage, Contacts, SMS, Wi-Fi scanning
+
+**Future (4R3S only when implemented):**
+
+- Bluetooth scan/connect, Nearby devices, Location (if required by Android for scans), Wi-Fi state
+
+Permissions will be requested only when features are implemented and explicitly enabled.
