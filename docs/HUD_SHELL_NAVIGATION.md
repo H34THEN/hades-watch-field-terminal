@@ -2,51 +2,64 @@
 
 Hades Watch Field Terminal is a **cyberpunk HUD companion shell** around the mobile Hades Watch website — not a generic browser.
 
-## Layout
+## Layout (current)
 
 | Layer | Component | Purpose |
 |-------|-----------|---------|
 | Content | `WebHubScreen`, tool screens | Dominant full-screen area |
-| Bottom dock | `HudBottomDock` | 4 primary tabs: Web, Tools, Reader, Settings |
-| Web overlay | `HudWebControls` | Collapsed chip + expandable back/forward/reload/routes |
-| Command FAB | `HudCommandFab` | Opens Field Terminal tools drawer from Web tab |
-| Sheets | `HudRouteSelectorSheet`, `HudToolDrawerSheet` | Allowlisted routes + local tools |
+| Overlay | **Field Hex** (`CommandHex`) | Draggable command orb — primary navigation |
+| Menu | `CommandHexMenu` | Floating panel: Web, Tools, Reader, Settings, web/tool actions |
+| Sheets | `HudRouteSelectorSheet` | Allowlisted Hades Watch routes (from hex menu) |
+| Bridge | `WebShellController` | Back/forward/reload/route selector for WebShell |
 
 Package: `app/src/main/java/com/heathen/hadeswatch/core/hud/`
+
+See [FIELD_HEX_COMMAND_HUD.md](FIELD_HEX_COMMAND_HUD.md) for full Field Hex behavior.
+
+## Removed / Unwired
+
+These components are **no longer part of the live shell**:
+
+- `HudBottomDock` — 4-tab bottom banner
+- `HudWebControls` — collapsible top web chrome
+- `HudCommandFab` + `HudToolDrawerSheet` — redundant with Field Hex menu
 
 ## Navigation Rules
 
 - **Single app-level `NavHostController`** in `MainActivity`
-- **Start destination:** `web?url=https://hadeswatch.com/dashboard` (Web tab)
-- Tab selection uses `popUpTo(startDestination) { saveState = true }` + `launchSingleTop` + `restoreState`
-- `resolveTabRoute()` maps nested routes to dock tabs:
-  - `web*` → Web
-  - `tools*` → Tools
-  - `reader` / `tools/k0reader` → Reader
-  - `settings*` → Settings
-- Tool drawer and sub-routes use simple `navigate(route) { launchSingleTop = true }`
+- **Start destination:** `web?url=https://hadeswatch.com/dashboard`
+- Field Hex menu navigates via `handleCommandHexAction()` in `HadesHudScaffold`
+- Tab-like destinations still exist in the nav graph: Web, Tools, Reader, Settings, tool sub-routes
+- `resolveTabRoute()` maps nested routes for menu context (web vs tools vs reader)
 
 ## Web Tab UX
 
-- WebView fills the screen; bottom dock overlays with 72dp content inset
-- Default **collapsed** HUD chip: “Hades Watch” + shield context
-- **Expanded** controls: host label, back, forward, reload, route selector, open externally
+- WebView fills the screen — **no permanent browser banner**
+- Optional brief safety chip on load (Settings toggle)
+- Back, forward, reload, route selector, open externally — **Field Hex menu only**
 - No address bar; no arbitrary URL entry
 - Route selector lists allowlisted Hades Watch paths only
 
+## Safe Insets
+
+- Web content edge-to-edge; hex and menus respect `WindowInsets.safeDrawing`
+- Tool/Settings screens use `safeDrawingPadding()` on content
+- No fixed header/footer overlays colliding with status or navigation bars
+
 ## Home Screen
 
-`home` route remains in the nav graph for deep links but is **not** on the bottom dock. Use route selector or deep link `hadeswatch://dashboard` to reach web content.
+`home` route remains in the nav graph for deep links. Use route selector or deep link `hadeswatch://dashboard` to reach web content.
 
 ## Manual Tests
 
-- [ ] Web / Tools / Reader / Settings dock tabs always respond
-- [ ] Selected tab matches current destination after tool sub-navigation
-- [ ] Web login page has minimal top chrome (collapsed chip only)
-- [ ] Expand web controls → back/forward/reload work
-- [ ] Route selector opens from expanded controls
-- [ ] FAB on Web tab opens tools drawer
-- [ ] Tools drawer entries navigate without dead buttons
-- [ ] Back from tool sub-screens returns predictably
+- [ ] Field Hex visible on WebShell and tool screens
+- [ ] Tap hex → menu opens; tap outside or Back dismisses
+- [ ] Drag hex → position persists after restart
+- [ ] Long press or Settings reset restores default position
+- [ ] Web login page has no bulky top banner
+- [ ] Menu: Web, Tools, Reader, Settings navigate correctly
+- [ ] On WebShell: back, forward, refresh, route selector work from menu
+- [ ] Hex does not overlap status bar or navigation bar
+- [ ] With hex disabled, Settings fallback button remains reachable
 
 See [MANUAL_TESTING.md](MANUAL_TESTING.md).

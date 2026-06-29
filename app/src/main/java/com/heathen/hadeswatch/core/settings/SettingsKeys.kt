@@ -22,4 +22,8 @@ object SettingsKeys {
     const val K0READER_ORP_ENABLED = "k0reader_orp_enabled"
     const val K0READER_SAVE_SESSION = "k0reader_save_session"
     const val K0READER_LAST_TEXT = "k0reader_last_text"
+    const val FIELD_HEX_ENABLED = "field_hex_enabled"
+    const val FIELD_HEX_SIZE = "field_hex_size"
+    const val FIELD_HEX_OPACITY = "field_hex_opacity"
+    const val FIELD_HEX_SHOW_SAFETY_CHIP = "field_hex_show_safety_chip"
 }

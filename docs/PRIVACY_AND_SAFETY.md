@@ -9,13 +9,13 @@
 
 ## Positioning
 
-Hades Watch Field Terminal is **not a general browser**. It is a safer sandboxed companion for hadeswatch.com with compact HUD web controls and local-first native tools. Gateway URLs are separate user-defined launchers and are not part of the Hades Watch trusted shell.
+Hades Watch Field Terminal is **not a general browser**. It is a safer sandboxed companion for hadeswatch.com with a draggable **Field Hex** command HUD and local-first native tools. Gateway URLs are separate user-defined launchers and are not part of the Hades Watch trusted shell.
 
 ## What the App Does
 
-- Loads allowlisted Hades Watch URLs in a hardened WebView
+- Loads allowlisted Hades Watch URLs in a hardened full-screen WebView
 - Preserves login sessions via standard WebView cookies
-- Stores UI preferences and local tool drafts in DataStore
+- Stores UI preferences (including Field Hex position/size) and local tool drafts in DataStore
 - Opens non-allowlisted links in the system browser (configurable)
 
 ## What the App Does Not Do (MVP)
@@ -66,6 +66,7 @@ Hades Watch Field Terminal is **not a general browser**. It is a safer sandboxed
 
 ## User Controls (Settings)
 
+- **Field Hex** — enable, size, opacity, safety chip toggle, reset position
 - Clear website session (cookies) — **separate from local tools**
 - Clear Hades Watch WebView cache
 - **Local Tool Data** screen — granular clears with confirmations

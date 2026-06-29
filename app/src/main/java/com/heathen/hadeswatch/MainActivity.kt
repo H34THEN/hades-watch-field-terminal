@@ -7,9 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
 import com.heathen.hadeswatch.core.hud.HadesHudScaffold
-import com.heathen.hadeswatch.core.hud.tabRouteFromNavRoute
+import com.heathen.hadeswatch.core.hud.WebShellController
 import com.heathen.hadeswatch.core.navigation.HadesDestination
 import com.heathen.hadeswatch.core.navigation.HadesNavGraph
 import com.heathen.hadeswatch.core.navigation.routeForBottomNav
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
 
             HadesWatchTheme(highContrast = highContrast, largeText = largeText) {
                 val navController = rememberNavController()
+                val webShellController = remember { WebShellController() }
                 val currentBackStackEntry by navController.currentBackStackEntryFlow.collectAsState(initial = null)
                 val currentRoute = currentBackStackEntry?.destination?.route
 
@@ -48,9 +50,10 @@ class MainActivity : ComponentActivity() {
 
                 HadesHudScaffold(
                     navController = navController,
+                    settingsRepository = app.settingsRepository,
                     currentRoute = currentRoute,
                     currentTabRoute = routeForBottomNav(currentRoute),
-                    dockItems = HadesDestination.hudDockItems,
+                    webShellController = webShellController,
                     k0ReaderEnabled = k0ReaderEnabled,
                     gatewaysEnabled = gatewaysEnabled,
                     signalReaderEnabled = signalReaderEnabled,
@@ -68,6 +71,7 @@ class MainActivity : ComponentActivity() {
                         sessionManager = app.sessionManager,
                         gatewayRepository = app.gatewayRepository,
                         signalSnippetRepository = app.signalSnippetRepository,
+                        webShellController = webShellController,
                         startDestination = HadesDestination.webHubRoute(),
                     )
                 }

@@ -1,46 +1,48 @@
 # UI/UX Rebuild
 
-Milestone history: 5-tab nav → **HUD shell** with 4-tab dock, compact web controls, EPUB import.
+Milestone history: 5-tab nav → HUD 4-tab dock → **Field Hex command HUD** (overlay-free web).
 
 ## Navigation Model (current)
 
-Bottom dock reduced to **4 primary tabs**:
+**Field Hex** replaces the bottom dock and fixed web chrome as the primary navigation control.
 
-| Tab | Route | Purpose |
-|-----|-------|---------|
-| Web | `web?url={url}` | Full-screen Hades Watch WebShell (default start) |
-| Tools | `tools` | Native/local tools hub |
-| Reader | `reader` | k0R34DER speed reader (top-level) |
-| Settings | `settings` | App settings, privacy, local data |
+| Destination | Route | Access |
+|-------------|-------|--------|
+| Web | `web?url={url}` | Field Hex → Web (default start) |
+| Tools | `tools` | Field Hex → Tools |
+| Reader | `reader` | Field Hex → Reader |
+| Settings | `settings` | Field Hex → Settings |
 
-`home` remains for deep links but is not on the dock.
+`home` remains for deep links but is not a primary tab.
 
 HUD components in `core/hud/`:
 
-- `HadesHudScaffold` — dock + content inset + tools FAB on Web
-- `HudBottomDock` — 4-tab navigation with save/restore state
-- `HudWebControls` — collapsible web chrome (replaces bulky browser banner)
-- `HudToolDrawerSheet` — Field Terminal tools overlay
+- `HadesHudScaffold` — safe insets, Field Hex overlay, route selector sheet
+- `CommandHex` / `CommandHexMenu` — draggable orb + floating command panel
+- `WebShellController` — web back/forward/reload bridge
 - `HudRouteSelectorSheet` — allowlisted Hades Watch routes
 
-See [HUD_SHELL_NAVIGATION.md](HUD_SHELL_NAVIGATION.md).
+Legacy (unwired): `HudBottomDock`, `HudWebControls`, `HudCommandFab`, `HudToolDrawerSheet`.
+
+See [FIELD_HEX_COMMAND_HUD.md](FIELD_HEX_COMMAND_HUD.md) and [HUD_SHELL_NAVIGATION.md](HUD_SHELL_NAVIGATION.md).
 
 ## Design System
 
 Reusable components in `core/ui/`:
 
-- `HadesBottomNav` — legacy 5-tab bar (retained; superseded by `HudBottomDock`)
+- `HadesBottomNav` — legacy 5-tab bar (retained; superseded)
 - `HadesActionCard`, `HadesToolCard`, `HadesSectionHeader`, `HadesSearchBar`
 - `HadesEmptyState`, `HadesWarningBox`, `HadesStatusChip`, `HadesIcon`
 
 ## k0R34DER UX
 
-- Dedicated **Reader** dock tab
+- **Reader** via Field Hex menu
 - **Import EPUB** via system picker — see [EPUB_IMPORT.md](EPUB_IMPORT.md)
 - Large ORP-style token display with optional focus highlight
 - Context preview (previous/next tokens dimmed)
 - Start/Pause, punctuation pause, chunk modes, focus mode
-- Signal Reader handoff → Reader tab
+- Signal Reader handoff → Reader route
+- Default hex position lower-right so central reading token stays clear
 
 ## Known UI Limitations
 
@@ -48,7 +50,9 @@ Reusable components in `core/ui/`:
 - ORP highlight is Kotlin-core approximation, not full Flutter UI parity
 - No landscape-specific layouts yet
 - EPUB: merged plain text only (no per-chapter UI)
+- Command menu uses floating panel style; radial menu not yet implemented
+- Reader-specific quick actions (play/pause in menu) deferred — navigation actions only
 
 ## Manual Test Notes
 
-See [MANUAL_TESTING.md](MANUAL_TESTING.md) — verify HUD dock, compact web controls, tools drawer, EPUB import.
+See [MANUAL_TESTING.md](MANUAL_TESTING.md) — verify Field Hex, safe insets, overlay-free WebShell, EPUB import.

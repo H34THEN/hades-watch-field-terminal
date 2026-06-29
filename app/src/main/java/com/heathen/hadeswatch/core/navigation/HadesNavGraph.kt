@@ -8,7 +8,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.heathen.hadeswatch.core.hud.WebShellController
 import com.heathen.hadeswatch.core.navigation.WebRoutes.BASE
+import com.heathen.hadeswatch.core.navigation.WebRoutes
 import com.heathen.hadeswatch.core.security.SessionManager
 import com.heathen.hadeswatch.core.settings.AppSettingsRepository
 import com.heathen.hadeswatch.features.ares.AresModuleScreen
@@ -39,6 +41,7 @@ fun HadesNavGraph(
     sessionManager: SessionManager,
     gatewayRepository: GatewayRepository,
     signalSnippetRepository: SignalSnippetRepository,
+    webShellController: WebShellController,
     startDestination: String = HadesDestination.webHubRoute(),
 ) {
     val reducedMotion by settingsRepository.reducedMotion.collectAsState(initial = false)
@@ -51,6 +54,7 @@ fun HadesNavGraph(
     val aresEnabled by settingsRepository.aresEnabled.collectAsState(initial = true)
     val fieldNotesEnabled by settingsRepository.fieldNotesEnabled.collectAsState(initial = true)
     val k0ReaderUseSdk by settingsRepository.k0ReaderUseSdkAdapter.collectAsState(initial = true)
+    val showSafetyChip by settingsRepository.fieldHexShowSafetyChip.collectAsState(initial = true)
     val gateways by gatewayRepository.gateways.collectAsState(initial = emptyList())
 
     NavHost(
@@ -77,8 +81,10 @@ fun HadesNavGraph(
             val encoded = backStackEntry.arguments?.getString("url").orEmpty()
             val url = URLDecoder.decode(encoded, Charsets.UTF_8.name())
             WebHubScreen(
+                webShellController = webShellController,
                 openExternalInBrowser = openExternal,
                 initialUrl = url.ifBlank { WebRoutes.DASHBOARD },
+                showSafetyChip = showSafetyChip,
             )
         }
         composable(HadesDestination.Tools.route) {

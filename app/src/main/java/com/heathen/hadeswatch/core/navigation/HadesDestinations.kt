@@ -5,7 +5,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Settings as SettingsIcon
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class HadesDestination(
@@ -18,7 +18,7 @@ sealed class HadesDestination(
     data object WebHub : HadesDestination("web?url={url}", "Web", Icons.Default.Language, tabRoute = "web")
     data object Tools : HadesDestination("tools", "Tools", Icons.Default.Build)
     data object Reader : HadesDestination("reader", "Reader", Icons.AutoMirrored.Filled.MenuBook)
-    data object Settings : HadesDestination("settings", "Settings", Icons.Default.Settings)
+    data object Settings : HadesDestination("settings", "Settings", Icons.Filled.SettingsIcon)
 
     // Legacy web sub-routes (deep links / internal navigation)
     data object Mmo : HadesDestination("mmo", "MMO")
@@ -44,7 +44,14 @@ sealed class HadesDestination(
     data object FutureApiStatus : HadesDestination("settings/future-api", "Future API Status")
 
     companion object {
-        val hudDockItems = listOf(WebHub, Tools, Reader, Settings)
+        val hudDockItems: List<HadesDestination> by lazy {
+            listOf(
+                HadesDestination.WebHub,
+                HadesDestination.Tools,
+                HadesDestination.Reader,
+                HadesDestination.Settings,
+            )
+        }
 
         fun webHubRoute(url: String = WebRoutes.DASHBOARD): String =
             "web?url=${java.net.URLEncoder.encode(url, Charsets.UTF_8.name())}"

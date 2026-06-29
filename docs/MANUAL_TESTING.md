@@ -2,30 +2,53 @@
 
 Use this checklist after builds or milestone changes.
 
-## Navigation (HUD 4-tab dock)
+## Field Hex Command HUD
 
-- [ ] Bottom dock shows: Web, Tools, Reader, Settings — each with icon + label
-- [ ] Selected tab is visually obvious after tool sub-navigation
-- [ ] Web tab is default start (dashboard URL)
-- [ ] Web HUD chip collapsed by default — login page has maximum vertical space
-- [ ] Expand web controls → back, forward, reload, routes, open externally
-- [ ] Route selector lists Dashboard, MMO, Dead Drops, Forums, Profile, Notifications, Login
-- [ ] FAB on Web tab opens Field Terminal tools drawer
-- [ ] Tools drawer quick actions navigate (k0R34DER, Signal Reader, Gateways, etc.)
-- [ ] Reader tab opens k0R34DER directly
-- [ ] Tool sub-screens highlight Tools tab in dock
-- [ ] No dead dock buttons
+- [ ] Field Hex appears on WebShell (default lower-right, above nav area)
+- [ ] Field Hex appears on Tools, Reader, Settings, and tool sub-screens
+- [ ] Tap hex → command menu opens with labeled actions
+- [ ] Tap outside menu or press Back → menu closes
+- [ ] Drag hex smoothly within screen; no status bar / nav bar overlap after drag
+- [ ] Release drag → position saved; restart app → same position restored
+- [ ] Long press hex → resets to default position
+- [ ] Settings → Field Hex → Reset position works
+- [ ] Size (Small/Medium/Large) and opacity settings apply
+- [ ] Disable Field Hex → small Settings fallback button visible; user not trapped
+- [ ] Hex contentDescription present (TalkBack: “Open Field Terminal menu”)
+- [ ] Drag does not accidentally open menu; tap does not accidentally drag
 
-## Hades Watch WebShell
+## Field Hex Menu Actions
 
-- [ ] MMO tab loads `https://hadeswatch.com/mmo`
-- [ ] Forums tab loads `https://hadeswatch.com/community/forums`
+- [ ] Web → navigates to WebShell
+- [ ] Tools → Tools Hub
+- [ ] Reader → k0R34DER
+- [ ] Settings → Settings screen
+- [ ] k0R34DER, Signal Reader, Underworld Gateways, Field Notes, Local Tool Data shortcuts work
+- [ ] Hide HUD 10s temporarily hides hex
+- [ ] Reset hex position from menu works
+
+## WebShell (overlay-free)
+
+- [ ] Login page has **no** bulky top browser banner or permanent footer dock
+- [ ] Web content uses maximum vertical space
+- [ ] Optional safety chip appears briefly on load (if enabled) then fades
+- [ ] From WebShell menu: Back, Forward, Refresh work
+- [ ] Route selector opens from menu — Dashboard, MMO, Dead Drops, Forums, Profile, Notifications, Login
+- [ ] Open externally works for allowlisted pages when setting enabled
 - [ ] External links open externally (when setting enabled)
 - [ ] Unknown domains do not become trusted in WebShell
+- [ ] Website touch input works when hex menu is closed
+
+## Safe Insets
+
+- [ ] No app chrome overlaps Android status bar / system time
+- [ ] Field Hex and menu controls are tappable (not under cutout)
+- [ ] No fixed footer overlaps gesture or 3-button navigation bar
+- [ ] Landscape: hex and menu remain usable (clamped on-screen)
 
 ## k0R34DER
 
-- [ ] Reader tab opens k0R34DER
+- [ ] Reader opens from Field Hex
 - [ ] Start/Pause auto-advances tokens
 - [ ] WPM slider and faster/slower buttons work
 - [ ] Chunk mode chips (1/2/3/Phrase) work
@@ -38,6 +61,7 @@ Use this checklist after builds or milestone changes.
 - [ ] EPUB RSVP playback works
 - [ ] Clear imported book works
 - [ ] Bad/corrupt EPUB shows friendly error (no crash)
+- [ ] Field Hex default position does not block central reading token
 
 ## Signal Reader
 
@@ -62,6 +86,7 @@ Use this checklist after builds or milestone changes.
 
 ## Settings
 
+- [ ] Field Hex section: enable, size, opacity, safety chip, reset position
 - [ ] Website session clear separate from local tool data
 - [ ] Local Tool Data management screen — all categories + confirmations
 - [ ] Future API Status screen — planned endpoints, no live calls

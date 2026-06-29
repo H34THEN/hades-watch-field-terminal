@@ -23,7 +23,7 @@ import com.heathen.hadeswatch.core.theme.TerminalGreen
 @Composable
 fun HudBottomDock(
     currentTabRoute: String,
-    items: List<HadesDestination>,
+    dockDestinations: List<HadesDestination>,
     onTabSelected: (HadesDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -34,14 +34,19 @@ fun HudBottomDock(
             .heightIn(min = 64.dp),
         containerColor = PanelDark.copy(alpha = 0.96f),
     ) {
-        items.forEach { destination ->
-            val selected = isTabSelected(currentTabRoute, destination)
+        for (destination in dockDestinations.filterNotNull()) {
+            val tabRoute = destination.tabRoute
+            val selected = if (tabRoute == HadesDestination.WebHub.tabRoute) {
+                currentTabRoute == "web" || currentTabRoute.startsWith("web")
+            } else {
+                currentTabRoute == tabRoute
+            }
             NavigationBarItem(
                 selected = selected,
                 onClick = { onTabSelected(destination) },
                 icon = {
-                    destination.icon?.let {
-                        Icon(imageVector = it, contentDescription = destination.label)
+                    destination.icon?.let { icon ->
+                        Icon(imageVector = icon, contentDescription = destination.label)
                     }
                 },
                 label = {
@@ -64,11 +69,14 @@ fun HudBottomDock(
     }
 }
 
-fun isTabSelected(currentTabRoute: String, destination: HadesDestination): Boolean =
-    when (destination) {
-        HadesDestination.WebHub -> currentTabRoute == "web" || currentTabRoute.startsWith("web")
-        else -> currentTabRoute == destination.tabRoute
+fun isTabSelected(currentTabRoute: String, destination: HadesDestination): Boolean {
+    val tabRoute = destination.tabRoute
+    return if (tabRoute == HadesDestination.WebHub.tabRoute) {
+        currentTabRoute == "web" || currentTabRoute.startsWith("web")
+    } else {
+        currentTabRoute == tabRoute
     }
+}
 
 fun resolveTabRoute(route: String): String =
     when (destinationForRoute(route)) {

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.heathen.hadeswatch.core.hud.CommandHexPositionStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -33,6 +34,10 @@ class AppSettingsRepository(private val context: Context) {
         val K0READER_ORP = booleanPreferencesKey(SettingsKeys.K0READER_ORP_ENABLED)
         val K0READER_SAVE_SESSION = booleanPreferencesKey(SettingsKeys.K0READER_SAVE_SESSION)
         val K0READER_LAST_TEXT = stringPreferencesKey(SettingsKeys.K0READER_LAST_TEXT)
+        val FIELD_HEX_ENABLED = booleanPreferencesKey(SettingsKeys.FIELD_HEX_ENABLED)
+        val FIELD_HEX_SIZE = intPreferencesKey(SettingsKeys.FIELD_HEX_SIZE)
+        val FIELD_HEX_OPACITY = intPreferencesKey(SettingsKeys.FIELD_HEX_OPACITY)
+        val FIELD_HEX_SHOW_SAFETY_CHIP = booleanPreferencesKey(SettingsKeys.FIELD_HEX_SHOW_SAFETY_CHIP)
     }
 
     val reducedMotion: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.REDUCED_MOTION] ?: false }
@@ -59,6 +64,11 @@ class AppSettingsRepository(private val context: Context) {
     val k0ReaderOrpEnabled: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.K0READER_ORP] ?: true }
     val k0ReaderSaveSession: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.K0READER_SAVE_SESSION] ?: false }
     val k0ReaderLastText: Flow<String> = context.settingsDataStore.data.map { it[Keys.K0READER_LAST_TEXT] ?: "" }
+    val fieldHexEnabled: Flow<Boolean> = context.settingsDataStore.data.map { it[Keys.FIELD_HEX_ENABLED] ?: true }
+    val fieldHexSize: Flow<Int> = context.settingsDataStore.data.map { it[Keys.FIELD_HEX_SIZE] ?: 1 }
+    val fieldHexOpacity: Flow<Int> = context.settingsDataStore.data.map { it[Keys.FIELD_HEX_OPACITY] ?: 1 }
+    val fieldHexShowSafetyChip: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[Keys.FIELD_HEX_SHOW_SAFETY_CHIP] ?: true }
 
     suspend fun setReducedMotion(value: Boolean) = setBoolean(Keys.REDUCED_MOTION, value)
     suspend fun setHighContrast(value: Boolean) = setBoolean(Keys.HIGH_CONTRAST, value)
@@ -79,6 +89,14 @@ class AppSettingsRepository(private val context: Context) {
     suspend fun setK0ReaderOrpEnabled(value: Boolean) = setBoolean(Keys.K0READER_ORP, value)
     suspend fun setK0ReaderSaveSession(value: Boolean) = setBoolean(Keys.K0READER_SAVE_SESSION, value)
     suspend fun setK0ReaderLastText(value: String) = setString(Keys.K0READER_LAST_TEXT, value)
+    suspend fun setFieldHexEnabled(value: Boolean) = setBoolean(Keys.FIELD_HEX_ENABLED, value)
+    suspend fun setFieldHexSize(value: Int) = setInt(Keys.FIELD_HEX_SIZE, value.coerceIn(0, 2))
+    suspend fun setFieldHexOpacity(value: Int) = setInt(Keys.FIELD_HEX_OPACITY, value.coerceIn(0, 2))
+    suspend fun setFieldHexShowSafetyChip(value: Boolean) = setBoolean(Keys.FIELD_HEX_SHOW_SAFETY_CHIP, value)
+
+    suspend fun resetFieldHexPosition() {
+        CommandHexPositionStore(context).reset()
+    }
 
     suspend fun clearLocalToolData() {
         context.settingsDataStore.edit { prefs ->

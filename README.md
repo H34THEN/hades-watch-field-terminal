@@ -15,8 +15,9 @@ Official Android companion app for [Hades Watch](https://hadeswatch.com).
 | Signal Reader + JSON import/export | Done |
 | Underworld Gateways + isolated viewer | Done |
 | Tools Hub polish (grouped, search, chips) | Done |
-| UI/UX rebuild (5-tab nav, design system) | Superseded by HUD shell (4-tab dock) |
-| HUD shell navigation + compact web controls | Done |
+| UI/UX rebuild (5-tab nav, design system) | Superseded by Field Hex HUD |
+| HUD shell navigation + compact web controls | Superseded by Field Hex HUD |
+| **Field Hex command HUD + overlay-free WebShell** | Done |
 | k0R34DER EPUB import (system picker) | Done |
 | k0R34DER reader experience upgrade | Done |
 | Local Tool Data management screen | Done |
@@ -92,15 +93,16 @@ This app is **not a general browser**. It is a safer sandboxed companion shell f
 
 See [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for the full checklist.
 
-### HUD navigation (4-tab dock)
+### Field Hex navigation
 
-- Web, Tools, Reader, Settings — each with icon + label
-- Compact web HUD controls (collapsed chip; expand for back/forward/reload/routes)
-- Tools FAB + drawer from Web tab
+- Draggable cyberpunk hex orb — tap for command menu (Web, Tools, Reader, Settings, web/tool actions)
+- Full-screen Hades Watch WebShell — no fixed browser banner or bottom dock
+- Safe inset handling — hex and menus avoid status/nav bars
 - k0R34DER Import EPUB via system picker
 
 ## Docs
 
+- [docs/FIELD_HEX_COMMAND_HUD.md](docs/FIELD_HEX_COMMAND_HUD.md)
 - [docs/HUD_SHELL_NAVIGATION.md](docs/HUD_SHELL_NAVIGATION.md)
 - [docs/EPUB_IMPORT.md](docs/EPUB_IMPORT.md)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
@@ -122,10 +124,12 @@ See [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for the full checklist.
 - Gateway / Signal Reader import merges without overwrite by default
 - k0R34DER EPUB import: text-only MVP; no DRM; no chapter picker UI yet
 - k0R34DER transfer buffer is in-memory only (not persisted across process death)
+- Field Hex menu uses floating panel style; radial menu not yet implemented
+- Reader play/pause quick actions in hex menu deferred
 
 ## Recommended Next Milestone
 
-1. Automated Dart↔Kotlin golden comparison script (optional CI)
-2. Gateway Viewer cookie partition research (Android 14+)
-3. Wire Future API when Hades Watch mobile endpoints ship
-4. Signal Reader tag filtering UI polish
+1. Reader-specific Field Hex quick actions (play/pause, import EPUB from menu)
+2. Optional radial menu style if UX testing favors it
+3. Gateway Viewer cookie partition research (Android 14+)
+4. Wire Future API when Hades Watch mobile endpoints ship

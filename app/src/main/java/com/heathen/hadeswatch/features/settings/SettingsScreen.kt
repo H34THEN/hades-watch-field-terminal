@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -44,6 +46,10 @@ fun SettingsScreen(
     onNavigate: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val fieldHexEnabled by settingsRepository.fieldHexEnabled.collectAsState(initial = true)
+    val fieldHexSize by settingsRepository.fieldHexSize.collectAsState(initial = 1)
+    val fieldHexOpacity by settingsRepository.fieldHexOpacity.collectAsState(initial = 1)
+    val fieldHexShowSafetyChip by settingsRepository.fieldHexShowSafetyChip.collectAsState(initial = true)
 
     Column(
         modifier = Modifier
@@ -97,6 +103,30 @@ fun SettingsScreen(
             )
             SettingsAction("View future API status") {
                 onNavigate(HadesDestination.FutureApiStatus.route)
+            }
+        }
+
+        HadesTerminalCard(title = "Field Hex") {
+            Text(
+                text = "Draggable command orb for navigation and web controls. Long-press the hex to reset its position.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MutedText,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            SettingsToggle("Enable Field Hex", fieldHexEnabled) {
+                scope.launch { settingsRepository.setFieldHexEnabled(it) }
+            }
+            SettingsToggle("Show brief safety chip on web load", fieldHexShowSafetyChip) {
+                scope.launch { settingsRepository.setFieldHexShowSafetyChip(it) }
+            }
+            HexSizeSelector("Hex size", fieldHexSize) {
+                scope.launch { settingsRepository.setFieldHexSize(it) }
+            }
+            HexSizeSelector("Hex opacity", fieldHexOpacity) {
+                scope.launch { settingsRepository.setFieldHexOpacity(it) }
+            }
+            SettingsAction("Reset Field Hex position") {
+                scope.launch { settingsRepository.resetFieldHexPosition() }
             }
         }
 
@@ -167,6 +197,25 @@ fun SettingsScreen(
                     .clickable { onNavigate(HadesDestination.PrivacySafety.route) }
                     .padding(vertical = 8.dp),
             )
+        }
+    }
+}
+
+@Composable
+private fun HexSizeSelector(label: String, selectedIndex: Int, onSelect: (Int) -> Unit) {
+    val options = listOf("Small", "Medium", "Large")
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(text = label, style = MaterialTheme.typography.bodyLarge)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+            options.forEachIndexed { index, option ->
+                Text(
+                    text = option,
+                    color = if (index == selectedIndex) TerminalGreen else MutedText,
+                    modifier = Modifier
+                        .clickable { onSelect(index) }
+                        .padding(8.dp),
+                )
+            }
         }
     }
 }

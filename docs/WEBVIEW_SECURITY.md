@@ -58,6 +58,13 @@ Hades Watch Field Terminal is **not a general browser**. It is a sandboxed mobil
 - No JavaScript bridges or page scraping
 - No website credential storage
 - EPUB imports processed locally only
+- **Field Hex** provides app navigation only — it does not inject into or scrape web pages
+
+## HUD Overlay
+
+- WebShell renders full screen without a permanent browser chrome bar
+- Optional brief safety chip on load (host + “secure shell” context) — user-dismissible via Settings
+- Web back/forward/reload/route selection exposed through Field Hex menu via `WebShellController` callbacks — not via page manipulation
 
 ## Back Navigation
 
