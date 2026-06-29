@@ -114,10 +114,7 @@ object CommandHexBounds {
 
     fun hexDimensions(size: FieldHexSize): HexDimensions {
         val base = hexSizeDp(size)
-        return HexDimensions(
-            width = base,
-            height = base * 0.82f,
-        )
+        return HexDimensions(width = base, height = base)
     }
 
     fun hexSizeDp(size: FieldHexSize): Dp = when (size) {

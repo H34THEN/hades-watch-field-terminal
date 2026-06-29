@@ -140,11 +140,6 @@ fun HadesHudScaffold(
             containerHeightPx,
             density.density,
         )
-        LaunchedEffect(clampedPosition.xFraction, clampedPosition.yFraction, isDragging) {
-            if (!isDragging && clampedPosition != hexPosition) {
-                hexPosition = clampedPosition
-            }
-        }
 
         Box(
             modifier = if (isWebScreen) {
@@ -176,8 +171,16 @@ fun HadesHudScaffold(
                 opacity = hexOpacity,
                 isMenuOpen = hexState.isMenuOpen,
                 onDragEnd = { final ->
-                    hexPosition = final
-                    scope.launch { positionStore.save(final) }
+                    val clamped = CommandHexBounds.clamp(
+                        final,
+                        hexDimensions,
+                        safePadding,
+                        containerWidthPx,
+                        containerHeightPx,
+                        density.density,
+                    )
+                    hexPosition = clamped
+                    scope.launch { positionStore.save(clamped) }
                 },
                 onTap = { hexState.isMenuOpen = !hexState.isMenuOpen },
                 onLongPress = {

@@ -15,13 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
@@ -53,7 +54,8 @@ fun CommandHex(
     val density = LocalDensity.current
     val (halfWidthPx, halfHeightPx) = CommandHexBounds.halfExtentsPx(dimensions, density)
 
-    var dragCenterPx by remember { mutableStateOf<Offset?>(null) }
+    var dragOffsetPx by remember { mutableStateOf(Offset.Zero) }
+    var isDragging by remember { mutableStateOf(false) }
     var didDrag by remember { mutableStateOf(false) }
 
     val restingCenter = CommandHexBounds.centerFromFraction(
@@ -65,16 +67,15 @@ fun CommandHex(
         halfWidthPx = halfWidthPx,
         halfHeightPx = halfHeightPx,
     )
-    val center = dragCenterPx ?: restingCenter
-    val isDragging = dragCenterPx != null
+    val restingCenterState = rememberUpdatedState(restingCenter)
 
     val scale by animateFloatAsState(
         targetValue = when {
-            isDragging -> 1.06f
+            isDragging -> 1.05f
             isMenuOpen -> 1.03f
             else -> 1f
         },
-        label = "hexScale",
+        label = "orbScale",
     )
 
     fun clampCenter(raw: Offset): Offset {
@@ -88,55 +89,67 @@ fun CommandHex(
         )
     }
 
+    fun clampDragOffset(anchor: Offset, offset: Offset): Offset {
+        val clamped = clampCenter(anchor + offset)
+        return clamped - anchor
+    }
+
     Box(
         modifier = modifier
             .offset {
                 IntOffset(
-                    (center.x - halfWidthPx).roundToInt(),
-                    (center.y - halfHeightPx).roundToInt(),
+                    (restingCenter.x - halfWidthPx).roundToInt(),
+                    (restingCenter.y - halfHeightPx).roundToInt(),
                 )
             }
+            .graphicsLayer {
+                translationX = dragOffsetPx.x
+                translationY = dragOffsetPx.y
+                scaleX = scale
+                scaleY = scale
+            }
             .size(dimensions.width, dimensions.height)
-            .scale(scale)
             .alpha(opacity)
             .semantics { contentDescription = "Open Field Terminal menu" }
-            .clip(HexagonShape)
+            .clip(OctagonShape)
             .background(PanelDark.copy(alpha = 0.94f))
-            .border(2.dp, if (isMenuOpen) SignalCyan else PanelBorder, HexagonShape)
+            .border(2.dp, if (isMenuOpen) SignalCyan else PanelBorder, OctagonShape)
             .pointerInput(dimensions, safeLeftPx, safeTopPx, safeWidthPx, safeHeightPx) {
+                var dragAnchor = Offset.Zero
                 detectDragGestures(
                     onDragStart = {
                         didDrag = false
-                        dragCenterPx = restingCenter
+                        dragAnchor = restingCenterState.value
+                        dragOffsetPx = Offset.Zero
+                        isDragging = true
                         onDragStateChange(true)
                     },
                     onDragEnd = {
-                        val finalCenter = dragCenterPx ?: restingCenter
-                        dragCenterPx = null
-                        onDragStateChange(false)
-                        onDragEnd(
-                            CommandHexBounds.fractionFromCenter(
-                                centerX = finalCenter.x,
-                                centerY = finalCenter.y,
-                                safeLeftPx = safeLeftPx,
-                                safeTopPx = safeTopPx,
-                                safeWidthPx = safeWidthPx,
-                                safeHeightPx = safeHeightPx,
-                                halfWidthPx = halfWidthPx,
-                                halfHeightPx = halfHeightPx,
-                            ),
+                        val finalCenter = clampCenter(dragAnchor + dragOffsetPx)
+                        val finalPosition = CommandHexBounds.fractionFromCenter(
+                            centerX = finalCenter.x,
+                            centerY = finalCenter.y,
+                            safeLeftPx = safeLeftPx,
+                            safeTopPx = safeTopPx,
+                            safeWidthPx = safeWidthPx,
+                            safeHeightPx = safeHeightPx,
+                            halfWidthPx = halfWidthPx,
+                            halfHeightPx = halfHeightPx,
                         )
+                        isDragging = false
+                        onDragStateChange(false)
+                        onDragEnd(finalPosition)
+                        dragOffsetPx = Offset.Zero
                     },
                     onDragCancel = {
-                        dragCenterPx = null
+                        dragOffsetPx = Offset.Zero
+                        isDragging = false
                         onDragStateChange(false)
                     },
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val current = dragCenterPx ?: restingCenter
-                        val next = clampCenter(current + dragAmount)
-                        dragCenterPx = next
-                        if (!didDrag && (next - restingCenter).getDistance() > 12f) {
+                        dragOffsetPx = clampDragOffset(dragAnchor, dragOffsetPx + dragAmount)
+                        if (!didDrag && dragOffsetPx.getDistance() > 12f) {
                             didDrag = true
                         }
                     },
@@ -157,7 +170,7 @@ fun CommandHex(
             imageVector = Icons.Default.Terminal,
             contentDescription = null,
             tint = if (isMenuOpen) SignalCyan else TerminalGreen,
-            modifier = Modifier.size(dimensions.width * 0.38f),
+            modifier = Modifier.size(dimensions.width * 0.36f),
         )
     }
 }
