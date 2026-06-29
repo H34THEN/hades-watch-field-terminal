@@ -37,6 +37,8 @@ sealed class HadesDestination(
     data object SignalSnippetEditor : HadesDestination("tools/signalreader/edit/{snippetId}", "Edit Signal")
     data object SignalSnippetDetail : HadesDestination("tools/signalreader/detail/{snippetId}", "Signal Detail")
     data object PrivacySafety : HadesDestination("settings/privacy", "Privacy & Safety")
+    data object LocalToolData : HadesDestination("settings/local-tool-data", "Local Tool Data")
+    data object FutureApiStatus : HadesDestination("settings/future-api", "Future API Status")
 
     companion object {
         val bottomNavItems = listOf(Home, Mmo, DeadDrops, Forums, Profile, Tools, Notifications, Settings)

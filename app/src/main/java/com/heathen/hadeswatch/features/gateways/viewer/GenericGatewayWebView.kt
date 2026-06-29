@@ -87,6 +87,8 @@ fun GenericGatewayWebView(
 }
 
 fun clearGatewayViewerData(context: android.content.Context) {
+    // Clears cache/history on a throwaway WebView only — does NOT call removeAllCookies().
+    // Hades Watch WebShell session clear is a separate Settings action.
     WebView(context).apply {
         clearCache(true)
         clearHistory()

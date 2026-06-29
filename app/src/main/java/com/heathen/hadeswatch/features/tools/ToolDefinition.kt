@@ -26,6 +26,14 @@ enum class ToolCategory {
     FUTURE,
 }
 
+enum class ToolHubSection {
+    LOCAL_TOOLS,
+    WEB_SHORTCUT,
+    SELF_HOSTED_GATEWAY,
+    PERMISSION_GATED,
+    COMING_SOON,
+}
+
 data class ToolDefinition(
     val id: String,
     val name: String,
@@ -40,4 +48,5 @@ data class ToolDefinition(
     val webUrl: String? = null,
     val settingsAction: String? = null,
     val settingsToggleKey: String? = null,
+    val hubSection: ToolHubSection? = null,
 )

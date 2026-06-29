@@ -10,4 +10,5 @@ data class SignalSnippet(
     val tags: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
+    val sortOrder: Int = 0,
 )

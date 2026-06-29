@@ -56,13 +56,15 @@ fun K0ReaderScreen(
     var chunkSize by remember { mutableIntStateOf(1) }
     var fontSize by remember { mutableIntStateOf(32) }
     var progress by remember { mutableStateOf(0f) }
+    var transferSource by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         wpm = prefs.wpm.first()
         chunkSize = prefs.chunkSize.first()
         fontSize = prefs.fontSize.first()
-        ReaderTransferRepository.consumePendingText()?.let { pending ->
-            inputText = pending
+        ReaderTransferRepository.consumePending()?.let { pending ->
+            inputText = pending.text
+            transferSource = pending.sourceTitle.takeIf { it.isNotBlank() }
         }
     }
 
@@ -101,6 +103,35 @@ fun K0ReaderScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MutedText,
         )
+        transferSource?.let { source ->
+            HadesTerminalCard(title = "Local transfer") {
+                Text(
+                    text = "Loaded from Signal Reader: $source",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SignalCyan,
+                )
+                Text(
+                    text = "In-memory only — cleared when you clear transfer or restart the app.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MutedText,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                OutlinedButton(
+                    onClick = {
+                        inputText = ""
+                        transferSource = null
+                        ReaderTransferRepository.clearPending()
+                        adapter.loadText("")
+                        displayToken = ""
+                        progress = 0f
+                        isPlaying = false
+                    },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    Text("Clear transferred text")
+                }
+            }
+        }
 
         OutlinedTextField(
             value = inputText,

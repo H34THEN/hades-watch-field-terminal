@@ -33,18 +33,25 @@
 - Preferences saved on device
 - No network upload
 
-### Underworld Gateways
-
-- User-defined NAS/homelab URLs stored locally
-- Opens externally — not in Hades Watch WebShell
-- No Hades Watch cookie sharing
-- No storage permissions in MVP (built-in icons only)
-
 ### Field Notes
 
 - Local draft textarea
 - Manual copy to website
 - Future sync only via official API with opt-in
+
+### Signal Reader
+
+- Local snippet library — manual entry only
+- JSON import/export on device (no upload)
+- Read in k0R34DER via in-memory transfer (temporary)
+- No scraping or website sync
+
+### Underworld Gateways
+
+- User-defined NAS/homelab URLs stored locally
+- External browser default; optional isolated Gateway Viewer
+- No Hades Watch cookie sharing by design (see [GATEWAY_VIEWER_COOKIE_ISOLATION.md](GATEWAY_VIEWER_COOKIE_ISOLATION.md))
+- No storage permissions in MVP (photo picker for custom icons)
 
 ### 4R3S
 
@@ -54,13 +61,14 @@
 
 ## User Controls (Settings)
 
-- Clear website session (cookies)
-- Clear WebView cache
-- Clear all local tool data
-- Clear k0R34DER preferences
-- Clear Underworld Gateways
+- Clear website session (cookies) — **separate from local tools**
+- Clear Hades Watch WebView cache
+- **Local Tool Data** screen — granular clears with confirmations
+- Future API Status (planned endpoints, not live)
 - Reduced motion / high contrast / large text
 - Tool enable/disable toggles
+
+See [MANUAL_TESTING.md](MANUAL_TESTING.md) for a full checklist.
 
 ## K0R34D3R Kotlin Core
 

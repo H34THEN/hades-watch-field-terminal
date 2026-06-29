@@ -10,15 +10,19 @@ Official Android companion app for [Hades Watch](https://hadeswatch.com).
 | Feature | Status |
 |---------|--------|
 | Hades Watch WebShell (trusted domains) | Done |
-| `:k0r34d3r-core` Kotlin module | Done |
+| `:k0r34d3r-core` Kotlin module + golden fixtures | Done |
 | k0R34DER (K0SdkReaderAdapter default) | Done |
-| Signal Reader (local snippets) | Done |
+| Signal Reader + JSON import/export | Done |
 | Underworld Gateways + isolated viewer | Done |
+| Tools Hub polish (grouped, search, chips) | Done |
+| Local Tool Data management screen | Done |
+| Future API scaffolds (no live calls) | Done |
 | Field Notes, 4R3S placeholder | Done |
 
 ## Build
 
 ```bash
+export JAVA_HOME=/opt/android-studio/jbr   # JDK 21 recommended
 ./gradlew assembleDebug
 ```
 
@@ -57,8 +61,8 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`
 
 | Tool | Notes |
 |------|-------|
-| k0R34DER | Local RSVP via `:k0r34d3r-core`; LocalK0ReaderAdapter fallback |
-| Signal Reader | Local snippet library; Read in k0R34DER |
+| k0R34DER | Local RSVP via `:k0r34d3r-core`; Signal Reader handoff |
+| Signal Reader | Local snippets; JSON import/export; Read in k0R34DER |
 | Underworld Gateways | NAS/homelab URLs; external browser default; optional Gateway Viewer |
 | Field Notes | Local draft |
 | 4R3S | Coming soon — no permissions |
@@ -74,30 +78,37 @@ No storage, location, Bluetooth, camera, or mic permissions.
 
 - **Hades Watch WebShell:** `hadeswatch.com` only
 - **Underworld Gateways:** User URLs — not allowlisted; no Hades Watch cookie sharing by design
-- **Gateway Viewer:** Isolated WebView, separate user agent, labeled UI
+- **Gateway Viewer:** Isolated WebView, separate user agent — see cookie isolation doc
 - **Signal Reader / k0R34DER:** Local-only, no upload, no scraping
+- **Future API:** Scaffold only — Settings → Future API Status
 
-## Manual Testing Checklist
+## Manual Testing
 
-1. Tools → Underworld Gateways — add HTTP + HTTPS gateways, export/import JSON
-2. Launch external browser gateway; confirm no Hades Watch session bleed
-3. Set gateway to in-app viewer — confirm Gateway Viewer label and HTTP warning
-4. Tools → Signal Reader — add snippet, search, Read in k0R34DER
-5. Settings — clear Signal Reader, gateways, Gateway Viewer cache separately
-6. Hades Watch MMO tab still loads hadeswatch.com
-7. `./gradlew :k0r34d3r-core:test` passes
+See [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for the full checklist.
 
 ## Docs
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [docs/UNDERWORLD_GATEWAYS.md](docs/UNDERWORLD_GATEWAYS.md)
 - [docs/SIGNAL_READER.md](docs/SIGNAL_READER.md)
+- [docs/SIGNAL_READER_IMPORT_EXPORT.md](docs/SIGNAL_READER_IMPORT_EXPORT.md)
+- [docs/GATEWAY_VIEWER_COOKIE_ISOLATION.md](docs/GATEWAY_VIEWER_COOKIE_ISOLATION.md)
 - [docs/K0R34D3R_PARITY_TESTS.md](docs/K0R34D3R_PARITY_TESTS.md)
+- [docs/FUTURE_API_ENDPOINTS.md](docs/FUTURE_API_ENDPOINTS.md)
+- [docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md)
 - [docs/TOOLS_ARCHITECTURE.md](docs/TOOLS_ARCHITECTURE.md)
 
 ## Known Limitations
 
 - WebView cookie isolation is process-level (documented honestly)
 - Custom gateway icons depend on photo picker URI persistence
-- No website API sync for Signal Reader or gateways
-- Gateway import merges without overwrite by default
+- No website API sync for Signal Reader or gateways until official endpoints + consent
+- Gateway / Signal Reader import merges without overwrite by default
+- k0R34DER transfer buffer is in-memory only (not persisted across process death)
+
+## Recommended Next Milestone
+
+1. Automated Dart↔Kotlin golden comparison script (optional CI)
+2. Gateway Viewer cookie partition research (Android 14+)
+3. Wire Future API when Hades Watch mobile endpoints ship
+4. Signal Reader tag filtering UI polish

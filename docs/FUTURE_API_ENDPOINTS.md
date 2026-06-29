@@ -30,7 +30,14 @@ All future API use must:
 
 ## App Readiness
 
-The Field Terminal MVP keeps native tools local-only. When endpoints ship:
+The Field Terminal MVP keeps native tools local-only. Scaffolding lives in `app/.../core/api/`:
+
+- `MobileApiRoutes` — planned path constants
+- `MobileApiCapability` / `MobileApiStatus` — capability metadata
+- `MobileApiNotes` — in-app copy
+- **Settings → Future API Status** — no network calls
+
+When endpoints ship:
 
 1. Add opt-in toggles in Settings
 2. Use authenticated HTTPS only to `hadeswatch.com`

@@ -20,6 +20,8 @@ import com.heathen.hadeswatch.features.gateways.viewer.GenericGatewayViewerScree
 import com.heathen.hadeswatch.features.home.HomeScreen
 import com.heathen.hadeswatch.features.k0reader.K0ReaderScreen
 import com.heathen.hadeswatch.features.notifications.NotificationsScreen
+import com.heathen.hadeswatch.features.settings.FutureApiStatusScreen
+import com.heathen.hadeswatch.features.settings.LocalToolDataScreen
 import com.heathen.hadeswatch.features.settings.PrivacySafetyScreen
 import com.heathen.hadeswatch.features.settings.SettingsScreen
 import com.heathen.hadeswatch.features.signalreader.SignalReaderDetailScreen
@@ -78,6 +80,7 @@ fun HadesNavGraph(
                 signalReaderEnabled = signalReaderEnabled,
                 aresEnabled = aresEnabled,
                 fieldNotesEnabled = fieldNotesEnabled,
+                compactMode = !largeText,
             )
         }
         composable(HadesDestination.Notifications.route) {
@@ -102,6 +105,16 @@ fun HadesNavGraph(
         }
         composable(HadesDestination.PrivacySafety.route) {
             PrivacySafetyScreen()
+        }
+        composable(HadesDestination.LocalToolData.route) {
+            LocalToolDataScreen(
+                settingsRepository = settingsRepository,
+                gatewayRepository = gatewayRepository,
+                signalSnippetRepository = signalSnippetRepository,
+            )
+        }
+        composable(HadesDestination.FutureApiStatus.route) {
+            FutureApiStatusScreen()
         }
         composable(HadesDestination.K0Reader.route) {
             K0ReaderScreen(
@@ -226,5 +239,7 @@ fun routeForBottomNav(route: String?): String = when {
     route?.startsWith("tools/gateways/") == true -> HadesDestination.Tools.route
     route?.startsWith("tools/signalreader/") == true -> HadesDestination.Tools.route
     route == HadesDestination.PrivacySafety.route -> HadesDestination.Settings.route
+    route == HadesDestination.LocalToolData.route -> HadesDestination.Settings.route
+    route == HadesDestination.FutureApiStatus.route -> HadesDestination.Settings.route
     else -> route ?: HadesDestination.Home.route
 }

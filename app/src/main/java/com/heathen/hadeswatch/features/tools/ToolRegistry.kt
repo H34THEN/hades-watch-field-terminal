@@ -28,7 +28,7 @@ object ToolRegistry {
             category = ToolCategory.READING,
             iconKey = "signal_reader",
             permissionsNeeded = "None",
-            safetyNote = "Local-only snippets. Does not scrape websites or upload text.",
+            safetyNote = "Local-only snippets. JSON import/export stays on device. Does not scrape websites.",
             route = HadesDestination.SignalReader.route,
             settingsToggleKey = SettingsKeys.TOOL_SIGNAL_READER_ENABLED,
         ),
@@ -41,9 +41,10 @@ object ToolRegistry {
             category = ToolCategory.LAUNCHER,
             iconKey = "gateways",
             permissionsNeeded = "None in MVP",
-            safetyNote = "User URLs — external browser default; optional isolated viewer.",
+            safetyNote = "User-defined URLs — external browser default; optional isolated viewer.",
             route = HadesDestination.UnderworldGateways.route,
             settingsToggleKey = SettingsKeys.TOOL_GATEWAYS_ENABLED,
+            hubSection = ToolHubSection.SELF_HOSTED_GATEWAY,
         ),
         ToolDefinition(
             id = "fieldnotes",
@@ -67,8 +68,9 @@ object ToolRegistry {
             category = ToolCategory.WEB,
             iconKey = "dead_drops",
             permissionsNeeded = "INTERNET (WebView)",
-            safetyNote = "Website remains source of truth.",
+            safetyNote = "Website remains source of truth. Trusted domain WebShell only.",
             webUrl = WebRoutes.DEAD_DROPS,
+            hubSection = ToolHubSection.WEB_SHORTCUT,
         ),
         ToolDefinition(
             id = "ares",
@@ -78,10 +80,11 @@ object ToolRegistry {
             classification = ToolClassification.PERMISSION_GATED,
             category = ToolCategory.OBSERVER,
             iconKey = "ares",
-            permissionsNeeded = "None in MVP",
+            permissionsNeeded = "Future: TBD (not requested in MVP)",
             safetyNote = "No scanning, no background services in MVP.",
             route = HadesDestination.Ares.route,
             settingsToggleKey = SettingsKeys.TOOL_ARES_ENABLED,
+            hubSection = ToolHubSection.PERMISSION_GATED,
         ),
         ToolDefinition(
             id = "accessibility",
@@ -94,6 +97,7 @@ object ToolRegistry {
             permissionsNeeded = "None",
             safetyNote = "Adjusts local UI preferences only.",
             settingsAction = HadesDestination.Settings.route,
+            hubSection = ToolHubSection.LOCAL_TOOLS,
         ),
     )
 
@@ -123,15 +127,27 @@ object ToolRegistry {
     ): List<Pair<String, List<ToolDefinition>>> {
         val visible = visibleTools(k0ReaderEnabled, gatewaysEnabled, signalReaderEnabled, aresEnabled, fieldNotesEnabled)
         return listOf(
-            "Local Tools" to visible.filter {
-                it.classification == ToolClassification.LOCAL_ONLY && it.status == ToolStatus.Available
+            "Available Local Tools" to visible.filter {
+                it.hubSection == ToolHubSection.LOCAL_TOOLS ||
+                    (it.classification == ToolClassification.LOCAL_ONLY &&
+                        it.status == ToolStatus.Available &&
+                        it.hubSection == null &&
+                        it.id != "gateways")
             },
-            "Web Shortcuts" to visible.filter { it.classification == ToolClassification.WEB_SHORTCUT },
+            "Hades Watch Web Shortcuts" to visible.filter {
+                it.hubSection == ToolHubSection.WEB_SHORTCUT ||
+                    it.classification == ToolClassification.WEB_SHORTCUT
+            },
+            "Self-Hosted / Gateway Tools" to visible.filter {
+                it.hubSection == ToolHubSection.SELF_HOSTED_GATEWAY ||
+                    (it.id == "gateways" && it.status == ToolStatus.Available)
+            },
+            "Permission-Gated Future Tools" to visible.filter {
+                it.hubSection == ToolHubSection.PERMISSION_GATED &&
+                    it.classification == ToolClassification.PERMISSION_GATED
+            },
             "Coming Soon" to visible.filter {
-                it.status == ToolStatus.ComingSoon || it.classification == ToolClassification.PERMISSION_GATED
-            },
-            "System" to visible.filter {
-                it.status == ToolStatus.SettingsShortcut || it.category == ToolCategory.SYSTEM
+                it.status == ToolStatus.ComingSoon && it.hubSection != ToolHubSection.PERMISSION_GATED
             },
         ).filter { it.second.isNotEmpty() }
     }

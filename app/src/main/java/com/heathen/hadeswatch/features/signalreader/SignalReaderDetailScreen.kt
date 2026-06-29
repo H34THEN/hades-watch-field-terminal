@@ -73,9 +73,17 @@ fun SignalReaderDetailScreen(
         HadesTerminalCard(title = "Transmission") {
             Text(text = s.body, style = MaterialTheme.typography.bodyLarge)
         }
+        Text(
+            text = "Read in k0R34DER transfers text locally only — nothing is uploaded.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MutedText,
+        )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
-                ReaderTransferRepository.setPendingText(s.body)
+                ReaderTransferRepository.setPending(
+                    text = s.body,
+                    sourceTitle = s.title.ifBlank { "Untitled signal" },
+                )
                 onReadInK0Reader()
             }) {
                 Text("Read in k0R34DER")
